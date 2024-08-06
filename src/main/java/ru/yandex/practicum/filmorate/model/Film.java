@@ -34,6 +34,7 @@ public class Film {
     private Duration duration;
     private MPA mpa;
     private LinkedHashSet<Genre> genres;
+    private Director director;
 
     public Film(String name, String description, LocalDate releaseDate, Duration duration, MPA mpa,
                 LinkedHashSet<Genre> genres) {

@@ -6,7 +6,9 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.exception.DataNotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.mappers.DirectorRowMapper;
 
 import java.util.Collection;
@@ -86,6 +88,25 @@ public class DirectorDbStorage implements DirectorStorage {
         final MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("id", id);
         log.debug("Удаляем из БД режиссера с id: {}", id);
+        jdbc.update(sql, params);
+    }
+
+    @Override
+    public void setDirectorToFilm(Film film) {
+        final int directorId = film.getDirector().getId();
+        final Director director = getDirectorById(directorId).orElseThrow(() -> {
+            log.warn("Режиссер с id: {} не найден в базе данных", directorId);
+            return new DataNotFoundException("Режиссер с id " + directorId + " не найден в базе данных");
+        });
+        film.setDirector(director);
+
+        final String sql = """
+                INSERT INTO film_director (film_id, director_id)
+                VALUES (:filmId, :directorId)
+                """;
+        final MapSqlParameterSource params = new MapSqlParameterSource();
+        params.addValue("filmId", film.getId());
+        params.addValue("directorId", directorId);
         jdbc.update(sql, params);
     }
 }

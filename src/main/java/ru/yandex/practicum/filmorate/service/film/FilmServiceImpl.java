@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.DataNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.like.LikeStorage;
@@ -21,6 +22,7 @@ public class FilmServiceImpl implements FilmService {
     private final LikeStorage ls;
     private final MPAStorage ms;
     private final GenreStorage gs;
+    private final DirectorStorage directorStorage;
     private  final Comparator<Genre> comparator = new Comparator<Genre>() {
         @Override
         public int compare(Genre o1, Genre o2) {
@@ -43,6 +45,10 @@ public class FilmServiceImpl implements FilmService {
         filmStorage.addFilm(film);
         if (film.getGenres() != null) {
             gs.setGenresToFilm(film);
+        }
+        //Добавляем связь "фильм - режиссер" по аналогии с жанрами выше
+        if (film.getDirector() != null) {
+            directorStorage.setDirectorToFilm(film);
         }
         return film;
     }
