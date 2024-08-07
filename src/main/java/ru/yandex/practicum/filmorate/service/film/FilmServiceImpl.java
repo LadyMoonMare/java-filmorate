@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.DataNotFoundException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
@@ -47,8 +48,8 @@ public class FilmServiceImpl implements FilmService {
             gs.setGenresToFilm(film);
         }
         //Добавляем связь "фильм - режиссер" по аналогии с жанрами выше
-        if (film.getDirector() != null) {
-            directorStorage.setDirectorToFilm(film);
+        if (film.getDirectors() != null) {
+            directorStorage.setDirectorsToFilm(film);
         }
         return film;
     }
@@ -65,6 +66,11 @@ public class FilmServiceImpl implements FilmService {
             gs.setGenresToFilm(film);
         } else {
             film.setGenres(new LinkedHashSet<>(gs.getGenresByFilmId(film.getId())));
+        }
+        //Обновляем связь "фильм - режиссер" по аналогии с жанрами выше
+        if (film.getDirectors() != null) {
+            directorStorage.removeFilmDirector(film.getId());
+            directorStorage.setDirectorsToFilm(film);
         }
         return filmStorage.updateFilm(film);
     }
@@ -108,5 +114,19 @@ public class FilmServiceImpl implements FilmService {
                 .toList();
         gs.loadGenres(popularFilms);
         return popularFilms;
+    }
+
+    @Override
+    public List<Film> getFilmsByDirector(int directorId, String sortBy) {
+        //Проверяем, что режиссер существует в базе данных
+        log.info("Запрашиваем режиссера из БД в id: {}", directorId);
+        Director director = directorStorage.getDirectorById(directorId).orElseThrow(() -> {
+            log.warn("Режиссер с id: {} не найден в базе данных", directorId);
+            return new DataNotFoundException("Режиссер с id " + directorId + " не найден в базе данных");
+        });
+        log.info("Запросили из базы данных режиссера {}", director);
+        List<Film> directorsFilms = filmStorage.getFilmsByDirector(directorId, sortBy);
+        log.info("Получили фильмы из БД {}", directorsFilms);
+        return directorsFilms;
     }
 }

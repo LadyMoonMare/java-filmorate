@@ -9,11 +9,11 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.DataNotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.mappers.DirectorRowMapper;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 @Slf4j
@@ -63,7 +63,7 @@ public class DirectorDbStorage implements DirectorStorage {
         params.addValue("name", director.getName());
         log.debug("Обновляем информацию о режиссере в БД. Параметры SQL запроса: {}", params);
         jdbc.update(sql, params);
-        return null;
+        return director;
     }
 
     @Override
@@ -92,21 +92,47 @@ public class DirectorDbStorage implements DirectorStorage {
     }
 
     @Override
-    public void setDirectorToFilm(Film film) {
-        final int directorId = film.getDirector().getId();
-        final Director director = getDirectorById(directorId).orElseThrow(() -> {
-            log.warn("Режиссер с id: {} не найден в базе данных", directorId);
-            return new DataNotFoundException("Режиссер с id " + directorId + " не найден в базе данных");
+    public void setDirectorsToFilm(Film film) {
+        final Map<Integer, Director> allDirectors = getAllDirectors().stream()
+                .collect(Collectors.toMap(Director::getId, director -> director));
+
+        final Set<Director> newDirectors = film.getDirectors();
+        film.setDirectors(new HashSet<>());
+
+        final List<MapSqlParameterSource> batchParams = new ArrayList<>();
+        newDirectors.forEach(director -> {
+            int directorId = director.getId();
+            if (!allDirectors.containsKey(directorId)) {
+                log.warn("Режиссер с id: {} не найден в БД", directorId);
+                throw new DataNotFoundException("Режиссер с id " + directorId + " не найден в базе данных.");
+            } else {
+                film.getDirectors().add(allDirectors.get(directorId));
+                MapSqlParameterSource params = new MapSqlParameterSource();
+                params.addValue("filmId", film.getId());
+                params.addValue("directorId", directorId);
+                batchParams.add(params);
+            }
         });
-        film.setDirector(director);
+
+        log.info("Добавляем связи 'фильм - режиссеры' в БД: {}", batchParams);
 
         final String sql = """
                 INSERT INTO film_director (film_id, director_id)
                 VALUES (:filmId, :directorId)
                 """;
+        jdbc.batchUpdate(sql, batchParams.toArray(new MapSqlParameterSource[0]));
+    }
+
+    @Override
+    public void removeFilmDirector(int id) {
+        final String sql = """
+                DELETE FROM film_director
+                WHERE film_id = :id
+                """;
         final MapSqlParameterSource params = new MapSqlParameterSource();
-        params.addValue("filmId", film.getId());
-        params.addValue("directorId", directorId);
+        params.addValue("id", id);
         jdbc.update(sql, params);
     }
+
+
 }
