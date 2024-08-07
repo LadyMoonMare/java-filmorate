@@ -134,5 +134,44 @@ public class DirectorDbStorage implements DirectorStorage {
         jdbc.update(sql, params);
     }
 
+//    @Override
+//    public List<Film> loadDirectors(List<Film> films) {
+//        List<Integer> filmIds = films.stream().map(Film::getId).toList();
+//        Map<Integer, Director> directors = new HashMap<>();
+//        Map<Integer, Film> f = new HashMap<>();
+//        films.forEach(film -> {
+//            film.setDirectors(new HashSet<>());
+//            f.put(film.getId(), film);
+//        });
+//        getAllDirectors().forEach(director -> directors.put(director.getId(), director));
+//        final String sql = """
+//                SELECT *
+//                FROM film_director
+//                WHERE film_id IN :filmIds
+//                """;
+//        jdbc.query()
+//        jdbc.query("SELECT * FROM film_genre",
+//                (rs) -> {
+//                    while (rs.next()) {
+//                        Integer filmId = rs.getInt("film_id");
+//                        /*Добавил тут проверку. Возникает NullPointerException если мы
+//                        присваиваем жанры не абсолютно всем фильмам из БД
+//                        а только некоторой выборке (например по режиссеру). Тогда фильма
+//                        с искомым id может не оказаться в Map<Integer, Film> f
+//                         */
+//                        Film film = f.get(filmId);
+//                        if (film != null) {
+//                            film.getGenres().add(directors.get(rs.getInt("genre_id")));
+//                        }
+//                    }
+//
+//                });
+//        f.values().forEach(film -> {
+//            film.setGenres(new LinkedHashSet<>(film.getGenres().stream()
+//                    .sorted(comparator).collect(Collectors.toSet())));
+//        });
+//        return new ArrayList<>(f.values());
+//    }
+
 
 }

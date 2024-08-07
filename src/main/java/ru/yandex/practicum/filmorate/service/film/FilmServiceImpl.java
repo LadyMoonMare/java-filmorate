@@ -125,8 +125,9 @@ public class FilmServiceImpl implements FilmService {
             return new DataNotFoundException("Режиссер с id " + directorId + " не найден в базе данных");
         });
         log.info("Запросили из базы данных режиссера {}", director);
-        List<Film> directorsFilms = filmStorage.getFilmsByDirector(directorId, sortBy);
-        log.info("Получили фильмы из БД {}", directorsFilms);
-        return directorsFilms;
+        List<Film> directorFilms = filmStorage.getFilmsByDirector(directorId, sortBy);
+        log.info("Получили фильмы из БД {}", directorFilms);
+        directorFilms = gs.loadGenres(directorFilms);
+        return directorStorage.loadDirectors(directorFilms);
     }
 }

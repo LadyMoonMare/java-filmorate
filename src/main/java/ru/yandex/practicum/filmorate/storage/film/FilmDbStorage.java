@@ -84,10 +84,11 @@ public class FilmDbStorage implements FilmStorage {
 
         // Создаем SQL-запрос с динамическим ORDER BY
         final String sql = String.format("""
-               SELECT f.id, f.title, f.description, f.releaseDate, f.duration, f.mpa_id, l.like_count
+               SELECT f.id, f.title, f.description, f.releaseDate, f.duration, f.mpa_id, mpa.rating, l.like_count
                FROM films AS f
                JOIN film_director AS fd
                ON f.id = fd.film_id
+               JOIN mpa on f.mpa_id = mpa.mpa_id
                LEFT JOIN (
                    SELECT film_id, COUNT(*) AS like_count
                    FROM likes
