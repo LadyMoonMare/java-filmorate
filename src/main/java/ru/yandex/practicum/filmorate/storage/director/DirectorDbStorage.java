@@ -9,7 +9,6 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.DataNotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.mappers.DirectorRowMapper;
 
 import java.util.*;
@@ -134,44 +133,61 @@ public class DirectorDbStorage implements DirectorStorage {
         jdbc.update(sql, params);
     }
 
-//    @Override
-//    public List<Film> loadDirectors(List<Film> films) {
-//        List<Integer> filmIds = films.stream().map(Film::getId).toList();
-//        Map<Integer, Director> directors = new HashMap<>();
-//        Map<Integer, Film> f = new HashMap<>();
-//        films.forEach(film -> {
-//            film.setDirectors(new HashSet<>());
-//            f.put(film.getId(), film);
-//        });
-//        getAllDirectors().forEach(director -> directors.put(director.getId(), director));
-//        final String sql = """
-//                SELECT *
-//                FROM film_director
-//                WHERE film_id IN :filmIds
-//                """;
-//        jdbc.query()
-//        jdbc.query("SELECT * FROM film_genre",
-//                (rs) -> {
-//                    while (rs.next()) {
-//                        Integer filmId = rs.getInt("film_id");
-//                        /*Добавил тут проверку. Возникает NullPointerException если мы
-//                        присваиваем жанры не абсолютно всем фильмам из БД
-//                        а только некоторой выборке (например по режиссеру). Тогда фильма
-//                        с искомым id может не оказаться в Map<Integer, Film> f
-//                         */
-//                        Film film = f.get(filmId);
-//                        if (film != null) {
-//                            film.getGenres().add(directors.get(rs.getInt("genre_id")));
-//                        }
-//                    }
-//
-//                });
-//        f.values().forEach(film -> {
-//            film.setGenres(new LinkedHashSet<>(film.getGenres().stream()
-//                    .sorted(comparator).collect(Collectors.toSet())));
-//        });
-//        return new ArrayList<>(f.values());
-//    }
+    @Override
+    public List<Film> loadDirectors(List<Film> films) {
+        //Мапим список фильмов в список их id
+        final List<Integer> filmIds = films.stream().map(Film::getId).toList();
 
+        // Получение всех связей между фильмами, которые есть в списке, и режиссерами
+        final String getFilmDirectorRelationsSql = """
+                SELECT film_id, director_id
+                FROM film_director
+                WHERE film_id IN (:filmIds)
+                """;
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        params.addValue("filmIds", filmIds);
 
+        //Для каждой связи создаем объект класса FilmDirectorRelation и кладем их в List
+        final List<FilmDirectorRelation> filmDirectorRelations = jdbc.query(getFilmDirectorRelationsSql, params,
+                (resultSet, rowNum) -> //лямбда реализует метод RowMapper для объектов FilmDirectorRelation
+                        new FilmDirectorRelation(resultSet.getInt("film_id"), resultSet.getInt("director_id")));
+        log.info("Получили все связи фильм-режиссер из БД, размер списка: {}", filmDirectorRelations.size());
+
+        //Получаем список уникальных id режиссеров для запрошенных фильмов
+        final List<Integer> directorIds = filmDirectorRelations.stream()
+                .map(relation -> relation.directorId).distinct().toList();
+
+        // Получение режиссеров по списку их id
+        final String getDirectorsSql = """
+                SELECT id, name
+                FROM directors
+                WHERE id IN (:directorIds)
+                """;
+        params = new MapSqlParameterSource();
+        params.addValue("directorIds", directorIds);
+        final List<Director> directors = jdbc.query(getDirectorsSql, params, new DirectorRowMapper());
+
+        // Создаем мапы для быстрого доступа к фильмам и режиссерам по их id
+        final Map<Integer, Film> filmMap = films.stream().collect(Collectors.toMap(Film::getId, film -> film));
+        final Map<Integer, Director> directorMap = directors.stream().collect(Collectors.toMap(Director::getId, director -> director));
+
+        // Добавление режиссеров к соответствующим фильмам
+        for (FilmDirectorRelation relation : filmDirectorRelations) {
+            Film film = filmMap.get(relation.filmId());
+            if (film != null) {
+                if(film.getDirectors() == null) {
+                    film.setDirectors(new HashSet<>());
+                }
+                Director director = directorMap.get(relation.directorId());
+                if (director != null) {
+                    film.getDirectors().add(director);
+                }
+            }
+        }
+        return films;
+    }
+
+    // Класс для представления связи между фильмом и режиссером
+    private record FilmDirectorRelation(int filmId, int directorId) {
+    }
 }

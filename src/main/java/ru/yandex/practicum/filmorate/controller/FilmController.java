@@ -89,27 +89,15 @@ public class FilmController {
             log.info("Параметр сортировки некорректный {}", sortBy);
             throw new ValidationException("Невалидный параметр sortBy. Ожиадается 'year' или 'likes'.");
         }
-
-        List<Film> films = filmService.getFilmsByDirector(directorId, sortBy);
-
-//        // Логика сортировки
-//        if (sortBy.contains("year")) {
-//            films = films.stream()
-//                    .sorted(Comparator.comparingInt(f -> f.getReleaseDate().getYear()))
-//                    .toList();
-//        }
-//        if (sortBy.contains("likes")) {
-//            films = films.stream()
-//                    .sorted((f1, f2) -> Integer.compare(f2.getLikes(), f1.getLikes()))
-//                    .toList();
-//        }
-
+        final List<Film> films = filmService.getFilmsByDirector(directorId, sortBy);
+        log.info("Возвращаем отсортированные по: '{}' фильмы режиссера с id: {}. Фильмы: {}", sortBy, directorId, films);
         return films;
     }
 
     private void validateFilm(Film film) {
         if (film.getReleaseDate().isBefore(FIRST_CINEMA_DATE))
-//                || film.getReleaseDate().isAfter(LocalDate.now())) В новых тестах дата релиза в будущем допустима
+//           В новых тестах дата релиза в будущем должна быть допустима, закомментировал строку
+//           || film.getReleaseDate().isAfter(LocalDate.now()))
         {
             log.warn("Data error - invalid release date {}", film.getReleaseDate());
             throw new ValidationException("Invalid date");

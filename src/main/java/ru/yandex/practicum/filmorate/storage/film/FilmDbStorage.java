@@ -77,12 +77,12 @@ public class FilmDbStorage implements FilmStorage {
         if (sortBy.equals("year")) {
             sortField = "f.releaseDate";
         } else {
-            sortField = "like_count"; // Сортировка по количеству лайков
+            sortField = "like_count";
         }
 
         log.info("Поле для сортировки {}", sortField);
 
-        // Создаем SQL-запрос с динамическим ORDER BY
+        //SQL-запрос с динамическим ORDER BY в зависимости от запроса
         final String sql = String.format("""
                SELECT f.id, f.title, f.description, f.releaseDate, f.duration, f.mpa_id, mpa.rating, l.like_count
                FROM films AS f
@@ -95,7 +95,7 @@ public class FilmDbStorage implements FilmStorage {
                    GROUP BY film_id
                    ) l ON f.id = l.film_id
                    WHERE fd.director_id = ?
-               ORDER BY %s
+               ORDER BY %s DESC
                """, sortField);
 
         return jdbcTemplate.query(sql, new FilmRowMapper(), directorId);
