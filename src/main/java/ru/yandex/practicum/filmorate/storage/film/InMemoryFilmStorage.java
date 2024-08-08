@@ -58,4 +58,10 @@ public class InMemoryFilmStorage implements FilmStorage {
     public Optional<Film> findFilmById(Integer id) {
         return Optional.ofNullable(films.get(id));
     }
+
+    //Добавил метод заглушку для InMemory рализации, чтобы класс корректно имплементировал FilmStorage
+    @Override
+    public List<Film> getFilmsByDirector(int directorId, String sortBy) {
+        return List.of();
+    }
 }

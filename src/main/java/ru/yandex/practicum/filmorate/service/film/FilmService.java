@@ -18,4 +18,6 @@ public interface FilmService {
     void removeLike(Integer id, Integer userId);
 
     List<Film> getPopularFilms(Integer count);
+
+    List<Film> getFilmsByDirector(int directorId, String sortBy);
 }

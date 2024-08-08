@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.util.serializer.LocalDateSerializer;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -34,6 +35,7 @@ public class Film {
     private Duration duration;
     private MPA mpa;
     private LinkedHashSet<Genre> genres;
+    private Set<Director> directors;
 
     public Film(String name, String description, LocalDate releaseDate, Duration duration, MPA mpa,
                 LinkedHashSet<Genre> genres) {
