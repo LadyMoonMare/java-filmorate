@@ -175,7 +175,7 @@ public class DirectorDbStorage implements DirectorStorage {
         for (FilmDirectorRelation relation : filmDirectorRelations) {
             Film film = filmMap.get(relation.filmId());
             if (film != null) {
-                if(film.getDirectors() == null) {
+                if (film.getDirectors() == null) {
                     film.setDirectors(new HashSet<>());
                 }
                 Director director = directorMap.get(relation.directorId());
