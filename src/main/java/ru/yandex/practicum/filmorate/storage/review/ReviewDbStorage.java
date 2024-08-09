@@ -51,7 +51,8 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public void deleteReview(Integer id) {
-
+        log.info("attempt to delete review with id = {} from database",id);
+        jo.update("DELETE FROM reviews WHERE id = ?;",id);
     }
 
     @Override

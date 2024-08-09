@@ -34,7 +34,8 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public void deleteReview(Integer id) {
-
+        getReview(id);
+        rs.deleteReview(id);
     }
 
     @Override
