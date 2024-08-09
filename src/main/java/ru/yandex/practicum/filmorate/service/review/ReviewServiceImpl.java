@@ -29,7 +29,8 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public Review updateReview(Review review) {
-        return null;
+        getReview(review.getId());
+        return rs.updateReview(review);
     }
 
     @Override

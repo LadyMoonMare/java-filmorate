@@ -32,7 +32,7 @@ public class ReviewDbStorage implements ReviewStorage {
                     "VALUES(?,?,?,?,?);", Statement.RETURN_GENERATED_KEYS);
             ps.setObject(1, review.getContent());
             ps.setObject(2, review.getFilmId());
-            ps.setObject(3, review.getPositive());
+            ps.setObject(3, review.getIsPositive());
             ps.setObject(4,review.getUseful());
             ps.setObject(5, review.getUserId());
             return ps;
@@ -46,7 +46,17 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public Review updateReview(Review review) {
-        return null;
+        log.info("attempt to update review with id = {} in database",review.getId());
+        jo.update("UPDATE reviews SET content = ?,film_id = ?, is_positive = ?," +
+                "user_id = ?, useful = ? WHERE id = ?;",
+                review.getContent(),
+                review.getFilmId(),
+                review.getIsPositive(),
+                review.getUserId(),
+                review.getUseful(),
+                review.getId());
+        log.info("update review success");
+        return  review;
     }
 
     @Override
