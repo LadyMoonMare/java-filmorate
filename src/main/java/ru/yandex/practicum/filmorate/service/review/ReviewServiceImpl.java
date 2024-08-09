@@ -39,7 +39,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public Review getReview(Integer id) {
-        return  null;
+        return  rs.findReview(id);
     }
 
     @Override

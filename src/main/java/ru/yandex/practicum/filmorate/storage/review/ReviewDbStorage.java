@@ -2,10 +2,13 @@ package ru.yandex.practicum.filmorate.storage.review;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.exception.DataNotFoundException;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.storage.mappers.ReviewRowMapper;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
@@ -16,6 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReviewDbStorage implements ReviewStorage {
     private final JdbcOperations jo;
+    private final ReviewRowMapper mapper;
 
     @Override
     public Review addReview(Review review) {
@@ -36,6 +40,7 @@ public class ReviewDbStorage implements ReviewStorage {
 
         review.setId(kh.getKeyAs(Integer.class));
 
+        log.info("review successfully added to database");
         return review;
     }
 
@@ -50,8 +55,15 @@ public class ReviewDbStorage implements ReviewStorage {
     }
 
     @Override
-    public Review getReview(Integer id) {
-        return  null;
+    public Review findReview(Integer id) {
+        log.info("attempt to find review with id= {}", id);
+        try {
+            return jo.queryForObject("SELECT * FROM reviews WHERE id = ?;",mapper,id);
+        } catch (EmptyResultDataAccessException e) {
+            log.warn("Exception is thrown - empty result");
+            log.warn("Review with id {} not found",id);
+            throw  new DataNotFoundException("Review with id {} not found");
+        }
     }
 
     @Override

@@ -11,7 +11,7 @@ public interface ReviewStorage {
 
     void deleteReview(Integer id);
 
-    Review getReview(Integer id);
+    Review findReview(Integer id);
 
     List<Review> getAllReviews(Integer count);
 
