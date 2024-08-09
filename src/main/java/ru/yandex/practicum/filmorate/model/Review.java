@@ -18,15 +18,10 @@ public class Review {
     @NotBlank
     private String content;
     @NotNull
-    private boolean isPositive;
+    private Boolean isPositive;
     @NotNull
     @Positive
     private int userId;
-
-    public boolean getPositive() {
-        return isPositive;
-    }
-
     @NotNull
     @Positive
     private int filmId;

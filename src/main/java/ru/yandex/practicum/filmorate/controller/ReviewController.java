@@ -20,7 +20,7 @@ public class ReviewController {
     private final ReviewService rs;
 
     @PostMapping
-    public Review addReview( @RequestBody Review review) {
+    public Review addReview(@Valid @RequestBody Review review) {
         log.info("attempt to add review");
         return rs.addReview(review);
     }
