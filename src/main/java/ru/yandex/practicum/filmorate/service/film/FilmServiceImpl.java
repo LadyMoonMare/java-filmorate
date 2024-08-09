@@ -12,18 +12,22 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.like.LikeStorage;
 import ru.yandex.practicum.filmorate.storage.mpa.MPAStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class FilmServiceImpl implements FilmService {
+
     private final FilmStorage filmStorage;
     private final LikeStorage ls;
     private final MPAStorage ms;
     private final GenreStorage gs;
     private final DirectorStorage directorStorage;
+    private final UserStorage us;
     private  final Comparator<Genre> comparator = new Comparator<Genre>() {
         @Override
         public int compare(Genre o1, Genre o2) {
@@ -130,4 +134,27 @@ public class FilmServiceImpl implements FilmService {
         directorFilms = gs.loadGenres(directorFilms);
         return directorStorage.loadDirectors(directorFilms);
     }
+
+    @Override
+    public List<Film> getCommonFilms(Integer userId, Integer friendId) {
+        checkUserById(userId);
+        checkUserById(friendId);
+        List<Film> commonFilms = ls.getFilmLikes(userId).stream() // Получаем фильмы, которые лайкнул пользователь
+                .filter(ls.getFilmLikes(friendId)::contains) // Фильтруем совпадению с фильмами, которые лайкнул друг
+                // Сортируем фильмы по количеству лайков
+                .sorted(Comparator.comparingInt((Film film) -> ls.getLikesFromDb(film.getId()).size()).reversed())
+                .collect(Collectors.toList());
+        return gs.loadGenres(commonFilms);
+    }
+
+    @Override // Скопировал и немного доработал метод из UserServiceImpl
+    public void checkUserById(Integer userId) {
+        us.findUserById(userId).orElseThrow(
+                () -> {
+                    log.warn("User with id {} not found", userId);
+                    return new DataNotFoundException("User with id {} not found");
+                }
+        );
+    }
+
 }

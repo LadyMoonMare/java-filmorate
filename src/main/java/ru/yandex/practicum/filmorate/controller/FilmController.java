@@ -94,6 +94,14 @@ public class FilmController {
         return films;
     }
 
+    @Validated
+    @GetMapping("/common") // Функциональность «Общие фильмы»
+    public List<Film> getCommonFilms(@RequestParam @Positive Integer userId,
+                                     @RequestParam @Positive Integer friendId) {
+        log.info("get common films from user {} by friend {}", userId, friendId);
+        return filmService.getCommonFilms(userId, friendId);
+    }
+
     private void validateFilm(Film film) {
         if (film.getReleaseDate().isBefore(FIRST_CINEMA_DATE)) {
 //           В новых тестах дата релиза в будущем должна быть допустима, закомментировал строку
@@ -117,4 +125,5 @@ public class FilmController {
             }
         }
     }
+
 }

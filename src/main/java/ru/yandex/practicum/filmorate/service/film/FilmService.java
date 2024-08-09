@@ -20,4 +20,11 @@ public interface FilmService {
     List<Film> getPopularFilms(Integer count);
 
     List<Film> getFilmsByDirector(int directorId, String sortBy);
+
+    // Функциональность «Общие фильмы»
+    List<Film> getCommonFilms(Integer userId, Integer friendId);
+
+    // Проверяем есть ли такой пользователь
+    void checkUserById(Integer userId);
+
 }
