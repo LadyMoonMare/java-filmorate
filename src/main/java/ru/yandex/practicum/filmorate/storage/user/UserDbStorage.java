@@ -14,7 +14,6 @@ import ru.yandex.practicum.filmorate.storage.mappers.UserRowMapper;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
