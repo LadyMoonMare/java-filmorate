@@ -11,8 +11,7 @@ import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -64,9 +63,17 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
+    public boolean deleteFilmById(Integer id) {
+        final String sql = "DELETE FROM films WHERE id = ?";
+        int status = jdbcTemplate.update(sql, id);
+        return status != 0;
+    }
+
+    @Override
     public Optional<Film> findFilmById(Integer id) {
         return Optional.ofNullable(jdbcTemplate.queryForObject("SELECT * FROM films AS f" +
                 " JOIN mpa AS m ON f.mpa_id = m.mpa_id WHERE id =" +
                 " ?;", filmRowMapper,id));
     }
+
 }

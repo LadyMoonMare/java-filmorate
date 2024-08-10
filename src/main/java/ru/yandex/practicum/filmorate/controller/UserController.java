@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.user.UserService;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -20,6 +21,7 @@ import java.util.*;
 @Validated
 public class UserController {
     private final UserService userService;
+    private final UserStorage userStorage;
 
     @GetMapping
     public List<User> getAllUsers() {
@@ -78,6 +80,12 @@ public class UserController {
                                        @PathVariable @Positive Integer otherId) {
         log.info("attempt to find user's {} and user's {} common friends", otherId, id);
         return userService.getCommonFriends(id, otherId);
+    }
+
+    @Validated
+    @DeleteMapping("/{id}")
+    public void deleteUserById(@PathVariable @Positive Integer id) {
+        userService.deleteUserById(id);
     }
 
     public void validateUser(User user) {

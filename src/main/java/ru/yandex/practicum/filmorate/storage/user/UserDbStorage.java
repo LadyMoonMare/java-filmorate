@@ -14,6 +14,7 @@ import ru.yandex.practicum.filmorate.storage.mappers.UserRowMapper;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -74,4 +75,9 @@ public class UserDbStorage implements UserStorage {
         }
     }
 
+    @Override
+    public void deleteUserById(Integer id) {
+        final String sql = "DELETE FROM app_users WHERE id = ?";
+        jdbcTemplate.update(sql, id);
+    }
 }
