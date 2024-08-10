@@ -4,23 +4,31 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.DataNotFoundException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.like.LikeStorage;
 import ru.yandex.practicum.filmorate.storage.mpa.MPAStorage;
-
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class FilmServiceImpl implements FilmService {
+
     private final FilmStorage filmStorage;
     private final LikeStorage ls;
     private final MPAStorage ms;
     private final GenreStorage gs;
+    private final DirectorStorage directorStorage;
+    private final UserStorage userStorage;
+    // private final FriendsStorage friendsStorages;
     private  final Comparator<Genre> comparator = new Comparator<Genre>() {
         @Override
         public int compare(Genre o1, Genre o2) {
@@ -44,6 +52,10 @@ public class FilmServiceImpl implements FilmService {
         if (film.getGenres() != null) {
             gs.setGenresToFilm(film);
         }
+        //Добавляем связь "фильм - режиссер" по аналогии с жанрами выше
+        if (film.getDirectors() != null) {
+            directorStorage.setDirectorsToFilm(film);
+        }
         return film;
     }
 
@@ -59,6 +71,11 @@ public class FilmServiceImpl implements FilmService {
             gs.setGenresToFilm(film);
         } else {
             film.setGenres(new LinkedHashSet<>(gs.getGenresByFilmId(film.getId())));
+        }
+        //Обновляем связь "фильм - режиссер" по аналогии с жанрами выше
+        if (film.getDirectors() != null) {
+            directorStorage.removeFilmDirector(film.getId());
+            directorStorage.setDirectorsToFilm(film);
         }
         return filmStorage.updateFilm(film);
     }
@@ -108,4 +125,45 @@ public class FilmServiceImpl implements FilmService {
         gs.loadGenres(popularFilms);
         return popularFilms;
     }
+
+    @Override
+    public List<Film> getFilmsByDirector(int directorId, String sortBy) {
+        //Проверяем, что режиссер существует в базе данных
+        log.info("Запрашиваем режиссера из БД в id: {}", directorId);
+        Director director = directorStorage.getDirectorById(directorId).orElseThrow(() -> {
+            log.warn("Режиссер с id: {} не найден в базе данных", directorId);
+            return new DataNotFoundException("Режиссер с id " + directorId + " не найден в базе данных");
+        });
+        log.info("Запросили из базы данных режиссера {}", director);
+        List<Film> directorFilms = filmStorage.getFilmsByDirector(directorId, sortBy);
+        log.info("Получили фильмы из БД {}", directorFilms);
+        directorFilms = gs.loadGenres(directorFilms);
+        return directorStorage.loadDirectors(directorFilms);
+    }
+
+    @Override
+    public List<Film> getCommonFilms(Integer userId, Integer friendId) {
+        Stream.of(userId, friendId).forEach(id ->
+                userStorage.findUserById(id).orElseThrow(() -> {
+                    log.warn("User with id {} not found", id);
+                    return new DataNotFoundException("User with id " + id + " not found");
+                })
+        );
+        // Добавил проверку на подтверждённую дружбу, но в тестах Postman и у обоих пользователей вообще нет друзей =(
+        /*if (friendsStorages.getFriendsFromDb(userId).stream()
+                .map(User::getId)
+                .noneMatch(id -> id.equals(friendId))
+                || friendsStorages.getFriendsFromDb(friendId).stream()
+                .map(User::getId)
+                .noneMatch(id -> id.equals(userId))) {
+            log.warn("Users with id {} and {} are not friends", userId, friendId);
+            throw new DataNotFoundException("Users with id " + userId + " and " + friendId + " are not friends");
+        }*/
+        List<Film> commonFilms = ls.getFilmLikes(userId).stream()
+                .filter(ls.getFilmLikes(friendId)::contains)
+                .sorted(Comparator.comparingInt((Film film) -> ls.getLikesFromDb(film.getId()).size()).reversed())
+                .collect(Collectors.toList());
+        return gs.loadGenres(commonFilms);
+    }
+
 }

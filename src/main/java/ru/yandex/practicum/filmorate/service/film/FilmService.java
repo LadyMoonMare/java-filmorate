@@ -20,4 +20,10 @@ public interface FilmService {
     void removeLike(Integer id, Integer userId);
 
     List<Film> getPopularFilms(Integer count);
+
+    List<Film> getFilmsByDirector(int directorId, String sortBy);
+
+    // Функциональность «Общие фильмы»
+    List<Film> getCommonFilms(Integer userId, Integer friendId);
+
 }
