@@ -53,7 +53,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public void deleteUserById(Integer id) {};
+    public void deleteUserById(Integer id) {}
 
     @Override
     public Optional<User> findUserById(Integer id) {
