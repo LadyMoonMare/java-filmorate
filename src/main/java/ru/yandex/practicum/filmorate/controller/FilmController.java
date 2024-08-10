@@ -66,14 +66,6 @@ public class FilmController {
         filmService.deleteFilmById(id);
     }
 
-//    @DeleteMapping("/{filmId}")
-//    @ResponseStatus(HttpStatus.NO_CONTENT)
-//    public void deleteFilm(@PathVariable Integer id) {
-//        log.info("Получен DELETE запрос на удаление фильма");
-//        filmService.deleteFilmById(id);
-//        log.info(String.format("Удален фильм с id %s", id));
-//    }
-
     @Validated
     @PutMapping("/{id}/like/{userId}")
     public void addLike(@PathVariable @Positive Integer id,
