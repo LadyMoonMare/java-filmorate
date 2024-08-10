@@ -13,7 +13,9 @@ import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.like.LikeStorage;
 import ru.yandex.practicum.filmorate.storage.mpa.MPAStorage;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -24,7 +26,7 @@ public class FilmServiceImpl implements FilmService {
     private final MPAStorage ms;
     private final GenreStorage gs;
     private final DirectorStorage directorStorage;
-    private  final Comparator<Genre> comparator = new Comparator<Genre>() {
+    private final Comparator<Genre> comparator = new Comparator<Genre>() {
         @Override
         public int compare(Genre o1, Genre o2) {
             return o1.getId() - o2.getId();
@@ -40,7 +42,7 @@ public class FilmServiceImpl implements FilmService {
     @Override
     public Film addFilm(Film film) {
         film.setMpa(ms.findRatingById(film.getMpa().getId()).orElseThrow(() -> {
-            log.warn("MPA with id {} not found",film.getMpa().getId());
+            log.warn("MPA with id {} not found", film.getMpa().getId());
             return new DataNotFoundException("MPA with id {} not found");
         }));
         filmStorage.addFilm(film);
@@ -58,7 +60,7 @@ public class FilmServiceImpl implements FilmService {
     public Film updateFilm(Film film) {
         getFilmById(film.getId());
         film.setMpa(ms.findRatingById(film.getMpa().getId()).orElseThrow(() -> {
-            log.warn("MPA with id {} not found",film.getMpa().getId());
+            log.warn("MPA with id {} not found", film.getMpa().getId());
             return new DataNotFoundException("MPA with id {} not found");
         }));
         if (film.getGenres() != null) {
@@ -79,7 +81,7 @@ public class FilmServiceImpl implements FilmService {
     public Film getFilmById(Integer id) {
         Film film = filmStorage.findFilmById(id).orElseThrow(
                 () -> {
-                    log.warn("Film with id {} not found",id);
+                    log.warn("Film with id {} not found", id);
                     return new DataNotFoundException("Film with id {} not found");
                 }
         );
@@ -107,7 +109,7 @@ public class FilmServiceImpl implements FilmService {
                     @Override
                     public int compare(Film o1, Film o2) {
                         return ls.getLikesFromDb(o2.getId()).size() -
-                                ls.getLikesFromDb(o1.getId()).size();
+                               ls.getLikesFromDb(o1.getId()).size();
                     }
                 })
                 .limit(count)
@@ -130,4 +132,45 @@ public class FilmServiceImpl implements FilmService {
         directorFilms = gs.loadGenres(directorFilms);
         return directorStorage.loadDirectors(directorFilms);
     }
+
+    @Override
+    public List<Film> searchFilms(String query, List<String> by) {
+        boolean searchByTitle = by.contains("title");
+        boolean searchByDirector = by.contains("director");
+        List<Film> searchedFilms = filmStorage.findFilmsByTitleAndDirectorSortedByLikes(query, searchByTitle, searchByDirector);
+        log.info("Получили фильмы из БД {}", searchedFilms);
+        searchedFilms = gs.loadGenres(searchedFilms);
+        return directorStorage.loadDirectors(searchedFilms);
+    }
+
+//    public List<Film> searchFilms(String query, List<String> by) {
+//        List<Film> serchedFilms = new ArrayList<>();
+//
+//        boolean searchByTitle = by.contains("title");
+//        boolean searchByDirector = by.contains("director");
+//
+//        if (searchByTitle && searchByDirector) {
+//            //Объединяем результаты поиска по названиям и по режиссерам
+//            List<Film> titleResults = filmStorage.findFilmsByTitle(query);
+//            List<Film> directorResults = filmStorage.findFilmsByDirector(query);
+//            serchedFilms.addAll(titleResults);
+//            serchedFilms.addAll(directorResults);
+//        } else if (searchByTitle) {
+//            serchedFilms = filmStorage.findFilmsByTitle(query);
+//        } else if (searchByDirector) {
+//            serchedFilms = filmStorage.findFilmsByDirector(query);
+//        } else {
+//            return List.of();
+//        }
+//
+//        //Отдельно запрашиваем лайки для сортировки
+//        List<Integer> filmIds = serchedFilms.stream().map(Film::getId).toList();
+//        Map<Integer, Integer> filmLikes = filmStorage.getFilmLikes(filmIds);
+//
+//        return serchedFilms.stream()
+//                .sorted((film1, film2) -> Integer.compare(
+//                        filmLikes.getOrDefault(film2.getId(), 0),
+//                        filmLikes.getOrDefault(film1.getId(), 0)
+//                )).toList();
+//    }
 }

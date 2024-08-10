@@ -137,6 +137,7 @@ public class DirectorDbStorage implements DirectorStorage {
     public List<Film> loadDirectors(List<Film> films) {
         //Мапим список фильмов в список их id
         final List<Integer> filmIds = films.stream().map(Film::getId).toList();
+        log.info("Ищем режиссеров фильмов с id: {} для добавления их в фильм", filmIds);
 
         // Получение всех связей между фильмами, которые есть в списке, и режиссерами
         final String getFilmDirectorRelationsSql = """

@@ -25,7 +25,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> getAllFilms() {
         return jdbcTemplate.query("SELECT * FROM films AS f " +
-                " JOIN mpa AS m ON f.mpa_id = m.mpa_id", filmRowMapper);
+                                  " JOIN mpa AS m ON f.mpa_id = m.mpa_id", filmRowMapper);
     }
 
     @Override
@@ -35,7 +35,7 @@ public class FilmDbStorage implements FilmStorage {
         log.info("addFilm attempt for database {}", film);
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement("INSERT INTO films (title," +
-                            "description, releaseDate, duration, mpa_id) VALUES (?,?,?,?,?);",
+                                                               "description, releaseDate, duration, mpa_id) VALUES (?,?,?,?,?);",
                     Statement.RETURN_GENERATED_KEYS);
             ps.setObject(1, film.getName());
             ps.setObject(2, film.getDescription());
@@ -53,7 +53,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film updateFilm(Film film) {
         jdbcTemplate.update("UPDATE films SET title = ?, description = ?, releaseDate = ?," +
-                        "duration = ?, mpa_id = ? WHERE id = ?;",
+                            "duration = ?, mpa_id = ? WHERE id = ?;",
                 film.getName(),
                 film.getDescription(),
                 film.getReleaseDate(),
@@ -66,8 +66,8 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Optional<Film> findFilmById(Integer id) {
         return Optional.ofNullable(jdbcTemplate.queryForObject("SELECT * FROM films AS f" +
-                " JOIN mpa AS m ON f.mpa_id = m.mpa_id WHERE id =" +
-                " ?;", filmRowMapper, id));
+                                                               " JOIN mpa AS m ON f.mpa_id = m.mpa_id WHERE id =" +
+                                                               " ?;", filmRowMapper, id));
     }
 
     @Override
@@ -84,20 +84,61 @@ public class FilmDbStorage implements FilmStorage {
 
         //SQL-запрос с динамическим ORDER BY в зависимости от запроса
         final String sql = String.format("""
-               SELECT f.id, f.title, f.description, f.releaseDate, f.duration, f.mpa_id, mpa.rating, l.like_count
-               FROM films AS f
-               JOIN film_director AS fd
-               ON f.id = fd.film_id
-               JOIN mpa on f.mpa_id = mpa.mpa_id
-               LEFT JOIN (
-                   SELECT film_id, COUNT(*) AS like_count
-                   FROM likes
-                   GROUP BY film_id
-                   ) l ON f.id = l.film_id
-                   WHERE fd.director_id = ?
-               ORDER BY %s DESC
-               """, sortField);
+                SELECT f.id, f.title, f.description, f.releaseDate, f.duration, f.mpa_id, mpa.rating, l.like_count
+                FROM films AS f
+                JOIN film_director AS fd
+                ON f.id = fd.film_id
+                JOIN mpa on f.mpa_id = mpa.mpa_id
+                LEFT JOIN (
+                    SELECT film_id, COUNT(*) AS like_count
+                    FROM likes
+                    GROUP BY film_id
+                    ) l ON f.id = l.film_id
+                    WHERE fd.director_id = ?
+                ORDER BY %s DESC
+                """, sortField);
 
         return jdbcTemplate.query(sql, new FilmRowMapper(), directorId);
+    }
+
+    @Override
+    public List<Film> findFilmsByTitleAndDirectorSortedByLikes(String query, boolean searchByTitle, boolean searchByDirector) {
+        //Конструируем sql запрос динамически в зависимости от параметров поиска
+        StringBuilder sql = new StringBuilder(
+                "SELECT f.id, f.title, f.description, f.releaseDate, f.duration, f.mpa_id, mpa.rating, COUNT(l.user_id) AS likes " +
+                "FROM films f " +
+                "JOIN mpa ON f.mpa_id = mpa.mpa_id " +
+                "LEFT JOIN likes l ON f.id = l.film_id "
+        );
+
+        if (searchByDirector) { //если поиск по режиссеру, то джойним таблицу с режиссерами
+            sql.append("LEFT JOIN film_director fd ON f.id = fd.film_id ")
+                    .append("LEFT JOIN directors d ON fd.director_id = d.id ");
+        }
+
+        sql.append("WHERE ");
+
+        if (searchByTitle) { //если поиск по названию, ищем подстроку query в названии
+            sql.append("LOWER(f.title) LIKE LOWER(?) ");
+        }
+
+        if (searchByTitle && searchByDirector) { //если поиск по названию и режиссеру, то в WHERE добавляем логическое 'или'
+            sql.append("OR ");
+        }
+
+        if (searchByDirector) { //если поиск по режиссеру, ищем подстроку query в имени режиссера
+            sql.append("LOWER(d.name) LIKE LOWER(?) ");
+        }
+
+        sql.append("GROUP BY f.id " +
+                   "ORDER BY likes DESC");
+
+        log.info("Сформировали SQL-запрос: {}", sql);
+
+        if (searchByTitle && searchByDirector) {
+            return jdbcTemplate.query(sql.toString(), filmRowMapper, "%" + query + "%", "%" + query + "%");
+        } else {
+            return jdbcTemplate.query(sql.toString(), filmRowMapper, "%" + query + "%");
+        }
     }
 }

@@ -94,6 +94,23 @@ public class FilmController {
         return films;
     }
 
+    @GetMapping("search")
+    public List<Film> searchFilms(@RequestParam() String query, @RequestParam List<String> by) {
+        log.info("Получили запрос на поиск фильмов. GET films/search/?query={}&by={}", query, by);
+        for (String param : by) {
+            log.info("В запросе аргумент {}", param);
+        }
+        // Проверка, что хотя бы один параметр поиска указан
+        if (by.isEmpty() || (!by.contains("title") && !by.contains("director"))) {
+            log.warn("Праметры поиска 'by' указаны некорректно: {}.", by);
+            throw new ValidationException("Параметр поиска указан некорректно. " +
+                                          "Ожидаем 'title' или 'director', а получили " + by);
+        }
+        final List<Film> films = filmService.searchFilms(query, by);
+        log.info("В ответ на запрос GET films/search/?query={}&by={} возвращаем фильмы {}", query, by, films);
+        return films;
+    }
+
     private void validateFilm(Film film) {
         if (film.getReleaseDate().isBefore(FIRST_CINEMA_DATE)) {
 //           В новых тестах дата релиза в будущем должна быть допустима, закомментировал строку
