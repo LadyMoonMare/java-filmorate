@@ -3,9 +3,11 @@ package ru.yandex.practicum.filmorate.storage.film;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.exception.DataNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 
@@ -71,9 +73,13 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Optional<Film> findFilmById(Integer id) {
-        return Optional.ofNullable(jdbcTemplate.queryForObject("SELECT * FROM films AS f" +
+        try {
+            return Optional.ofNullable(jdbcTemplate.queryForObject("SELECT * FROM films AS f" +
                 " JOIN mpa AS m ON f.mpa_id = m.mpa_id WHERE id =" +
                 " ?;", filmRowMapper,id));
+        } catch (EmptyResultDataAccessException e) {
+            log.warn("Film with id {} not found",id);
+            throw  new DataNotFoundException("Film with id {} not found");
+        }
     }
-
 }
