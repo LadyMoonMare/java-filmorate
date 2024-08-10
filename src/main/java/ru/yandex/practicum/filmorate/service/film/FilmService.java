@@ -21,5 +21,8 @@ public interface FilmService {
 
     List<Film> getFilmsByDirector(int directorId, String sortBy);
 
+    // Функциональность «Общие фильмы»
+    List<Film> getCommonFilms(Integer userId, Integer friendId);
+
     List<Film> searchFilms(String query, List<String> by);
 }
