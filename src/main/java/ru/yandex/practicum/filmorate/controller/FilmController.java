@@ -98,7 +98,6 @@ public class FilmController {
             log.warn("Data error - invalid mpa id {}",film.getMpa().getId());
             throw new ValidationException("Invalid mpa id");
         }
-
         if (film.getGenres() != null) {
             for (Genre genre : film.getGenres()) {
                 if (genre.getId() < 1 || genre.getId() > gs.getNumberOf()) {
