@@ -17,7 +17,7 @@ public class LikeDbStorage implements LikeStorage {
 
     private final JdbcOperations jdbcTemplate;
     private final UserRowMapper urm;
-    private final FilmRowMapper frm;
+    private final FilmRowMapper filmRowMapper;
 
     @Override
     public List<User> getLikesFromDb(Integer id) {
@@ -35,7 +35,7 @@ public class LikeDbStorage implements LikeStorage {
                 JOIN likes AS l ON f.id = l.film_id
                 JOIN app_users AS u ON l.user_id = u.id
                 WHERE u.id =?;
-                """, frm, userId);
+                """, filmRowMapper, userId);
     }
 
     @Override

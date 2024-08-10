@@ -24,7 +24,4 @@ public interface FilmService {
     // Функциональность «Общие фильмы»
     List<Film> getCommonFilms(Integer userId, Integer friendId);
 
-    // Проверяем есть ли такой пользователь
-    void checkUserById(Integer userId);
-
 }

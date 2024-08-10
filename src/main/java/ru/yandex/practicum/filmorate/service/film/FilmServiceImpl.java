@@ -13,9 +13,9 @@ import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.like.LikeStorage;
 import ru.yandex.practicum.filmorate.storage.mpa.MPAStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
-
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -27,7 +27,8 @@ public class FilmServiceImpl implements FilmService {
     private final MPAStorage ms;
     private final GenreStorage gs;
     private final DirectorStorage directorStorage;
-    private final UserStorage us;
+    private final UserStorage userStorage;
+    // private final FriendsStorage friendsStorages;
     private  final Comparator<Genre> comparator = new Comparator<Genre>() {
         @Override
         public int compare(Genre o1, Genre o2) {
@@ -137,24 +138,27 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public List<Film> getCommonFilms(Integer userId, Integer friendId) {
-        checkUserById(userId);
-        checkUserById(friendId);
-        List<Film> commonFilms = ls.getFilmLikes(userId).stream() // Получаем фильмы, которые лайкнул пользователь
-                .filter(ls.getFilmLikes(friendId)::contains) // Фильтруем совпадению с фильмами, которые лайкнул друг
-                // Сортируем фильмы по количеству лайков
+        Stream.of(userId, friendId).forEach(id ->
+                userStorage.findUserById(id).orElseThrow(() -> {
+                    log.warn("User with id {} not found", id);
+                    return new DataNotFoundException("User with id " + id + " not found");
+                })
+        );
+        // Добавил проверку на подтверждённую дружбу, но в тестах Postman и у обоих пользователей вообще нет друзей =(
+        /*if (friendsStorages.getFriendsFromDb(userId).stream()
+                .map(User::getId)
+                .noneMatch(id -> id.equals(friendId))
+                || friendsStorages.getFriendsFromDb(friendId).stream()
+                .map(User::getId)
+                .noneMatch(id -> id.equals(userId))) {
+            log.warn("Users with id {} and {} are not friends", userId, friendId);
+            throw new DataNotFoundException("Users with id " + userId + " and " + friendId + " are not friends");
+        }*/
+        List<Film> commonFilms = ls.getFilmLikes(userId).stream()
+                .filter(ls.getFilmLikes(friendId)::contains)
                 .sorted(Comparator.comparingInt((Film film) -> ls.getLikesFromDb(film.getId()).size()).reversed())
                 .collect(Collectors.toList());
         return gs.loadGenres(commonFilms);
-    }
-
-    @Override // Скопировал и немного доработал метод из UserServiceImpl
-    public void checkUserById(Integer userId) {
-        us.findUserById(userId).orElseThrow(
-                () -> {
-                    log.warn("User with id {} not found", userId);
-                    return new DataNotFoundException("User with id {} not found");
-                }
-        );
     }
 
 }
