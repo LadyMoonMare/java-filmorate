@@ -31,7 +31,10 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public Review updateReview(Review review) {
-        getReview(review.getId());
+        //getReview(review.getId()); странно, однако тесты в постмане считают, что такой валидации
+        // быть не должно
+        isValid(review.getFilmId(), review.getUserId());
+        review.setUseful(0);
         return rs.updateReview(review);
     }
 
