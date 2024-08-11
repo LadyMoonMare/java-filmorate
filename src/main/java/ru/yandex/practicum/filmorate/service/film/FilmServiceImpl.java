@@ -168,7 +168,7 @@ public class FilmServiceImpl implements FilmService {
     public List<Film> searchFilms(String query, List<String> by) {
         final boolean searchByTitle = by.contains("title");
         final boolean searchByDirector = by.contains("director");
-        List<Film> searchedFilms = filmStorage.findFilmsByTitleAndDirectorSortedByLikes(query, searchByTitle, searchByDirector);
+        List<Film> searchedFilms = filmStorage.searchFilmsByParameter(query, searchByTitle, searchByDirector);
         log.info("Получили фильмы из БД {}", searchedFilms);
         searchedFilms = gs.loadGenres(searchedFilms);
         return directorStorage.loadDirectors(searchedFilms);

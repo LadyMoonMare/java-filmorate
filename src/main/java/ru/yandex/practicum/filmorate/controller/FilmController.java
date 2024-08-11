@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -102,11 +104,12 @@ public class FilmController {
         return filmService.getCommonFilms(userId, friendId);
     }
 
+    @Validated
     @GetMapping("search")
-    public List<Film> searchFilms(@RequestParam() String query, @RequestParam List<String> by) {
+    public List<Film> searchFilms(@RequestParam() @NotBlank String query, @RequestParam @NotNull List<String> by) {
         log.info("Получили запрос на поиск фильмов. GET films/search/?query={}&by={}", query, by);
         // Проверка, что хотя бы один параметр поиска указан
-        if (by.isEmpty() || (!by.contains("title") && !by.contains("director"))) {
+        if (!by.contains("title") && !by.contains("director")) {
             log.warn("Праметры поиска 'by' указаны некорректно: {}.", by);
             throw new ValidationException("Параметр поиска указан некорректно. " +
                                           "Ожидаем 'title' или 'director', а получили " + by);

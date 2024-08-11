@@ -66,7 +66,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> findFilmsByTitleAndDirectorSortedByLikes(String query, boolean searchByTitle, boolean searchByDirector) {
+    public List<Film> searchFilmsByParameter(String query, boolean searchByTitle, boolean searchByDirector) {
         return List.of();
     }
 }

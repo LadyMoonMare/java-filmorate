@@ -86,9 +86,8 @@ public class FilmDbStorage implements FilmStorage {
         final String sql = String.format("""
                 SELECT f.id, f.title, f.description, f.releaseDate, f.duration, f.mpa_id, mpa.rating, l.like_count
                 FROM films AS f
-                JOIN film_director AS fd
-                ON f.id = fd.film_id
-                JOIN mpa on f.mpa_id = mpa.mpa_id
+                JOIN film_director AS fd ON f.id = fd.film_id
+                JOIN mpa ON f.mpa_id = mpa.mpa_id
                 LEFT JOIN (
                     SELECT film_id, COUNT(*) AS like_count
                     FROM likes
@@ -102,7 +101,7 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> findFilmsByTitleAndDirectorSortedByLikes(String query, boolean searchByTitle, boolean searchByDirector) {
+    public List<Film> searchFilmsByParameter(String query, boolean searchByTitle, boolean searchByDirector) {
         final String sqlSearchByTitle = """
                 SELECT f.id, f.title, f.description, f.releaseDate, f.duration, f.mpa_id, mpa.rating, COUNT(l.user_id) AS likes
                 FROM films f
