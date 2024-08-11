@@ -95,6 +95,12 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public void deleteFilmById(Integer id) {
+        filmStorage.findFilmById(id).orElseThrow(
+                () -> {
+                    log.warn("Film with id {} not found",id);
+                    return new DataNotFoundException("Film with id {} not found");
+                }
+        );
         filmStorage.deleteFilmById(id);
     }
 

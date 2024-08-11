@@ -30,10 +30,9 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public boolean deleteFilmById(Integer id) {
+    public void deleteFilmById(Integer id) {
         final String sql = "DELETE FROM films WHERE id = ?";
         int status = jdbcTemplate.update(sql, id);
-        return status != 0;
     }
 
     @Override

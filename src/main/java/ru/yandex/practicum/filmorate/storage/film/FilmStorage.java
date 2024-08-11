@@ -8,7 +8,7 @@ import java.util.Optional;
 public interface FilmStorage {
     List<Film> getAllFilms();
 
-    boolean deleteFilmById(Integer id);
+    void deleteFilmById(Integer id);
 
     Film addFilm(Film film);
 
