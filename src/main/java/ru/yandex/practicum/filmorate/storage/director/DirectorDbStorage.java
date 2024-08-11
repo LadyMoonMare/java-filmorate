@@ -173,12 +173,10 @@ public class DirectorDbStorage implements DirectorStorage {
         final Map<Integer, Director> directorMap = directors.stream().collect(Collectors.toMap(Director::getId, director -> director));
 
         // Добавление режиссеров к соответствующим фильмам
+        filmMap.forEach((id, film) -> film.setDirectors(new HashSet<>()));
         for (FilmDirectorRelation relation : filmDirectorRelations) {
             Film film = filmMap.get(relation.filmId());
             if (film != null) {
-                if (film.getDirectors() == null) {
-                    film.setDirectors(new HashSet<>());
-                }
                 Director director = directorMap.get(relation.directorId());
                 if (director != null) {
                     film.getDirectors().add(director);

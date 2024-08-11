@@ -13,13 +13,12 @@ import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.like.LikeStorage;
 import ru.yandex.practicum.filmorate.storage.mpa.MPAStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -167,42 +166,11 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public List<Film> searchFilms(String query, List<String> by) {
-        boolean searchByTitle = by.contains("title");
-        boolean searchByDirector = by.contains("director");
+        final boolean searchByTitle = by.contains("title");
+        final boolean searchByDirector = by.contains("director");
         List<Film> searchedFilms = filmStorage.findFilmsByTitleAndDirectorSortedByLikes(query, searchByTitle, searchByDirector);
         log.info("Получили фильмы из БД {}", searchedFilms);
         searchedFilms = gs.loadGenres(searchedFilms);
         return directorStorage.loadDirectors(searchedFilms);
     }
-
-//    public List<Film> searchFilms(String query, List<String> by) {
-//        List<Film> serchedFilms = new ArrayList<>();
-//
-//        boolean searchByTitle = by.contains("title");
-//        boolean searchByDirector = by.contains("director");
-//
-//        if (searchByTitle && searchByDirector) {
-//            //Объединяем результаты поиска по названиям и по режиссерам
-//            List<Film> titleResults = filmStorage.findFilmsByTitle(query);
-//            List<Film> directorResults = filmStorage.findFilmsByDirector(query);
-//            serchedFilms.addAll(titleResults);
-//            serchedFilms.addAll(directorResults);
-//        } else if (searchByTitle) {
-//            serchedFilms = filmStorage.findFilmsByTitle(query);
-//        } else if (searchByDirector) {
-//            serchedFilms = filmStorage.findFilmsByDirector(query);
-//        } else {
-//            return List.of();
-//        }
-//
-//        //Отдельно запрашиваем лайки для сортировки
-//        List<Integer> filmIds = serchedFilms.stream().map(Film::getId).toList();
-//        Map<Integer, Integer> filmLikes = filmStorage.getFilmLikes(filmIds);
-//
-//        return serchedFilms.stream()
-//                .sorted((film1, film2) -> Integer.compare(
-//                        filmLikes.getOrDefault(film2.getId(), 0),
-//                        filmLikes.getOrDefault(film1.getId(), 0)
-//                )).toList();
-//    }
 }
