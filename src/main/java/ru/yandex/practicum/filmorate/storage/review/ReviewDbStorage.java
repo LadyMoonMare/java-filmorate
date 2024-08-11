@@ -89,24 +89,4 @@ public class ReviewDbStorage implements ReviewStorage {
         return jo.query("SELECT * FROM reviews WHERE film_id = ?" +
                 " ORDER BY useful LIMIT(?);", mapper, filmId, count);
     }
-
-    @Override
-    public void addLike(Integer id, Integer userId) {
-
-    }
-
-    @Override
-    public void addDislike(Integer id, Integer userId) {
-
-    }
-
-    @Override
-    public void deleteLike(Integer id, Integer userId) {
-
-    }
-
-    @Override
-    public void deleteDislike(Integer id, Integer userId) {
-
-    }
 }

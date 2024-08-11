@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.exception.DataNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.like.LikeStorage;
 import ru.yandex.practicum.filmorate.storage.review.ReviewStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -19,6 +20,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final ReviewStorage rs;
     private final FilmStorage fs;
     private final UserStorage us;
+    private final LikeStorage ls;
 
     @Override
     public Review addReview(Review review) {
@@ -51,12 +53,21 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public List<Review> getAllReviewsByFilmId(Integer filmId, Integer count) {
+        fs.findFilmById(filmId);
         return rs.getAllReviewsByFilmId(filmId, count);
     }
 
     @Override
     public void addLike(Integer id, Integer userId) {
+        getReview(id);
+        us.findUserById(userId);
+        log.info("attempt to add like to review with id = {} by user with id = {}", id, userId);
+        ls.addLikeToReview(id, userId);
 
+        log.info("review id = {} get useful +1", id);
+        Review review = getReview(id);
+        review.setUseful(getReview(id).getUseful() + 1 );
+        rs.updateReview(review);
     }
 
     @Override

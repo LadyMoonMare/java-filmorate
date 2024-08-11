@@ -42,3 +42,11 @@ film_id INTEGER,
 useful INTEGER
 );
 
+CREATE TABLE IF NOT EXISTS like_reviews (
+    review_id INT REFERENCES reviews(id),
+    user_id INT REFERENCES app_users(id),
+    is_like BOOLEAN,
+    PRIMARY KEY(review_id, user_id)
+);
+
+
