@@ -17,11 +17,5 @@ public interface ReviewService {
 
     List<Review> getAllReviewsByFilmId(Integer filmId, Integer count);
 
-    void addLike(Integer id, Integer userId);
-
-    void addDislike(Integer id, Integer userId);
-
-    void deleteLike(Integer id, Integer userId);
-
-    void deleteDislike(Integer id, Integer userId);
+    void manageLikesAndDislikes(Integer id, Integer userId, String type);
 }

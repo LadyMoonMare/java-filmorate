@@ -62,21 +62,21 @@ public class ReviewController {
     @PutMapping("/{id}/like/{userId}") //is useful
     public void addLike(@PathVariable @Positive Integer id, @PathVariable @Positive Integer userId) {
         log.info("attempt to add like to review with id = {}, by user {}", id, userId);
-        rs.addLike(id, userId);
+        rs.manageLikesAndDislikes(id, userId, "addLike");
     }
 
     @Validated
     @PutMapping("{id}/dislike/{userId}") //is useless
     public void addDislike(@PathVariable @Positive Integer id, @PathVariable @Positive Integer userId) {
         log.info("attempt to add dislike to review with id = {}, by user {}", id, userId);
-        rs.addDislike(id, userId);
+        rs.manageLikesAndDislikes(id, userId, "addDislike");
     }
 
     @Validated
     @DeleteMapping("/{id}/like/{userId}")
     public void deleteLike(@PathVariable @Positive Integer id, @PathVariable @Positive Integer userId) {
         log.info("attempt to delete like from review with id = {}, by user {}", id, userId);
-        rs.deleteLike(id, userId);
+        rs.manageLikesAndDislikes(id, userId, "deleteLike");
     }
 
     @Validated
@@ -84,7 +84,7 @@ public class ReviewController {
     public void deleteDislike(@PathVariable @Positive Integer id,
                               @PathVariable @Positive Integer userId) {
         log.info("attempt to delete dislike from review with id = {}, by user {}", id, userId);
-        rs.deleteDislike(id, userId);
+        rs.manageLikesAndDislikes(id, userId, "deleteDislike");
     }
 
 }

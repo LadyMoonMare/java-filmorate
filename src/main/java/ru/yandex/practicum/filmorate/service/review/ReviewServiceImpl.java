@@ -58,39 +58,42 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public void addLike(Integer id, Integer userId) {
-        getReview(id);
-        us.findUserById(userId);
-        log.info("attempt to add like to review with id = {} by user with id = {}", id, userId);
-        ls.addLikeToReview(id, userId);
-
-        log.info("review id = {} get useful +1", id);
+    public void manageLikesAndDislikes(Integer id, Integer userId, String type) {
         Review review = getReview(id);
-        review.setUseful(getReview(id).getUseful() + 1 );
-        rs.updateReview(review);
-    }
-
-    @Override
-    public void addDislike(Integer id, Integer userId) {
-        getReview(id);
         us.findUserById(userId);
-        log.info("attempt to add dislike to review with id = {} by user with id = {}", id, userId);
-        ls.addDislikeToReview(id, userId);
 
-        log.info("review id = {} get useful -1", id);
-        Review review = getReview(id);
-        review.setUseful(getReview(id).getUseful() - 1 );
+        switch (type) {
+            case "addLike":
+                log.info("attempt to add like to review with id = {} by user with id = {}",
+                        id, userId);
+                ls.addLikeToReview(id, userId);
+
+                log.info("review id = {} get useful +1", id);
+                review.setUseful(getReview(id).getUseful() + 1);
+            case "addDislike":
+                log.info("attempt to add dislike to review with id = {} by user with id = {}",
+                        id, userId);
+                ls.addDislikeToReview(id, userId);
+
+                log.info("review id = {} get useful -1", id);
+                review.setUseful(getReview(id).getUseful() - 1);
+            case "deleteLike":
+                log.info("attempt to remove like from review with id = {} by user with id = {}",
+                        id, userId);
+                ls.removeLike(id, userId);
+
+                log.info("review id = {} get useful -1", id);
+                review.setUseful(getReview(id).getUseful() - 1);
+            case "deleteDislike":
+                log.info("attempt to remove dislike from review with id = {} by user with id = {}",
+                        id, userId);
+                ls.deleteDislikeFromReview(id, userId);
+
+                log.info("review id = {} get useful + 1", id);
+                review.setUseful(getReview(id).getUseful() + 1);
+        }
+
         rs.updateReview(review);
-    }
-
-    @Override
-    public void deleteLike(Integer id, Integer userId) {
-
-    }
-
-    @Override
-    public void deleteDislike(Integer id, Integer userId) {
-
     }
 
     public void isValid(Integer filmId, Integer userId) {
