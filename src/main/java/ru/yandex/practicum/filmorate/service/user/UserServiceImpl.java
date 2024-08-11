@@ -4,19 +4,22 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.DataNotFoundException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.friends.FriendsStorage;
+import ru.yandex.practicum.filmorate.storage.like.LikeStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
-
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
+
     private final UserStorage userStorage;
     private final FriendsStorage fs;
+    private final LikeStorage likeStorage;
 
     @Override
     public List<User> getAllUsers() {
@@ -83,4 +86,28 @@ public class UserServiceImpl implements UserService {
         }
         return commonFriends;
     }
+
+    @Override
+    public List<Film> getRecommendations(Integer userId) {
+        getUserById(userId);
+        List<Film> filmLikes = likeStorage.getFilmLikes(userId);
+        if (filmLikes.isEmpty()) {
+            return Collections.emptyList();
+        }
+        Integer candidateId = filmLikes.stream()
+                .flatMap(film -> likeStorage.getLikesFromDb(film.getId()).stream())
+                .filter(user -> user.getId() != userId)
+                .collect(Collectors.groupingBy(User::getId, Collectors.counting()))
+                .entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(null);
+        if (candidateId == null) {
+            return Collections.emptyList();
+        }
+        return likeStorage.getFilmLikes(candidateId).stream()
+                .filter(film -> !filmLikes.contains(film))
+                .collect(Collectors.toList());
+    }
+
 }

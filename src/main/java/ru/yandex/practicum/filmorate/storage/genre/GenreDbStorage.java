@@ -78,8 +78,15 @@ public class GenreDbStorage implements GenreStorage {
                 (rs) -> {
                     while (rs.next()) {
                         Integer filmId = rs.getInt("film_id");
-                        f.get(filmId).getGenres().add(genres.get(rs.getInt("genre_id")));
-
+                        /*Добавил тут проверку. Возникает NullPointerException если мы
+                        присваиваем жанры не абсолютно всем фильмам из БД
+                        а только некоторой выборке (например по режиссеру). Тогда фильма
+                        с искомым id может не оказаться в Map<Integer, Film> f
+                         */
+                        Film film = f.get(filmId);
+                        if (film != null) {
+                            film.getGenres().add(genres.get(rs.getInt("genre_id")));
+                        }
                     }
 
                 });
