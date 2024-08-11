@@ -46,7 +46,7 @@ public class ReviewController {
     }
 
     @Validated
-    @GetMapping("?filmId={filmId}&count={count}")
+    @GetMapping()
     public List<Review> getAllReviews(@RequestParam(defaultValue = "null") @Positive Integer filmId,
                                       @RequestParam(defaultValue = "10") @Positive Integer count) {
         if (filmId == null) {

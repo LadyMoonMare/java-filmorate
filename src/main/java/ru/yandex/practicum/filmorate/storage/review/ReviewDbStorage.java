@@ -33,7 +33,7 @@ public class ReviewDbStorage implements ReviewStorage {
             ps.setObject(1, review.getContent());
             ps.setObject(2, review.getFilmId());
             ps.setObject(3, review.getIsPositive());
-            ps.setObject(4,review.getUseful());
+            ps.setObject(4, review.getUseful());
             ps.setObject(5, review.getUserId());
             return ps;
         }, kh);
@@ -46,9 +46,9 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public Review updateReview(Review review) {
-        log.info("attempt to update review with id = {} in database",review.getId());
+        log.info("attempt to update review with id = {} in database", review.getId());
         jo.update("UPDATE reviews SET content = ?,film_id = ?, is_positive = ?," +
-                "user_id = ?, useful = ? WHERE id = ?;",
+                        "user_id = ?, useful = ? WHERE id = ?;",
                 review.getContent(),
                 review.getFilmId(),
                 review.getIsPositive(),
@@ -56,35 +56,38 @@ public class ReviewDbStorage implements ReviewStorage {
                 review.getUseful(),
                 review.getId());
         log.info("update review success");
-        return  review;
+        return review;
     }
 
     @Override
     public void deleteReview(Integer id) {
-        log.info("attempt to delete review with id = {} from database",id);
-        jo.update("DELETE FROM reviews WHERE id = ?;",id);
+        log.info("attempt to delete review with id = {} from database", id);
+        jo.update("DELETE FROM reviews WHERE id = ?;", id);
     }
 
     @Override
     public Review findReview(Integer id) {
         log.info("attempt to find review with id= {}", id);
         try {
-            return jo.queryForObject("SELECT * FROM reviews WHERE id = ?;",mapper,id);
+            return jo.queryForObject("SELECT * FROM reviews WHERE id = ?;", mapper, id);
         } catch (EmptyResultDataAccessException e) {
             log.warn("Exception is thrown - empty result");
-            log.warn("Review with id {} not found",id);
-            throw  new DataNotFoundException("Review with id {} not found");
+            log.warn("Review with id {} not found", id);
+            throw new DataNotFoundException("Review with id {} not found");
         }
     }
 
     @Override
     public List<Review> getAllReviews(Integer count) {
-        return null;
+        log.info("attempt to get all reviews from database, count = {}", count);
+        return jo.query("SELECT * FROM reviews ORDER BY useful LIMIT(?);", mapper, count);
     }
 
     @Override
     public List<Review> getAllReviewsByFilmId(Integer filmId, Integer count) {
-        return null;
+        log.info("attempt to get reviews for film with id = {}", filmId);
+        return jo.query("SELECT * FROM reviews WHERE film_id = ?" +
+                " ORDER BY useful LIMIT(?);", mapper, filmId, count);
     }
 
     @Override

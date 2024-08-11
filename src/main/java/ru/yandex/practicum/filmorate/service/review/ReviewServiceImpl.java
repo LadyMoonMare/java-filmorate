@@ -41,17 +41,17 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public Review getReview(Integer id) {
-        return  rs.findReview(id);
+        return rs.findReview(id);
     }
 
     @Override
     public List<Review> getAllReviews(Integer count) {
-        return null;
+        return rs.getAllReviews(count);
     }
 
     @Override
     public List<Review> getAllReviewsByFilmId(Integer filmId, Integer count) {
-        return null;
+        return rs.getAllReviewsByFilmId(filmId, count);
     }
 
     @Override
