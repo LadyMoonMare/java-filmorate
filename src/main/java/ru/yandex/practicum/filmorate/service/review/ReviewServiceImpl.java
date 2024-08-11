@@ -72,7 +72,15 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public void addDislike(Integer id, Integer userId) {
+        getReview(id);
+        us.findUserById(userId);
+        log.info("attempt to add dislike to review with id = {} by user with id = {}", id, userId);
+        ls.addDislikeToReview(id, userId);
 
+        log.info("review id = {} get useful -1", id);
+        Review review = getReview(id);
+        review.setUseful(getReview(id).getUseful() - 1 );
+        rs.updateReview(review);
     }
 
     @Override

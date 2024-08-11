@@ -41,7 +41,8 @@ public class LikeDbStorage implements LikeStorage {
 
     @Override
     public void addDislikeToReview(Integer id, Integer userId) {
-
+        jdbcTemplate.update("INSERT INTO review_likes (review_id, user_id, is_like) VALUES (?,?);"
+                , id, userId, false);
     }
 
     @Override
