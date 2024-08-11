@@ -87,66 +87,26 @@ public class UserServiceImpl implements UserService {
         return commonFriends;
     }
 
-    /* С этой версии метода getRecommendations начинал делать функциональность «Рекомендации», затем переделал
-       её с использованием stream. Получилась логически непростая реализация, решил оставить старый код для
-       чтения хода мысли. */
-
-    /*@Override
+    @Override
     public List<Film> getRecommendations(Integer userId) {
         getUserById(userId);
-        if (likeStorage.getFilmLikes(userId).isEmpty()) {
+        List<Film> filmLikes = likeStorage.getFilmLikes(userId);
+        if (filmLikes.isEmpty()) {
             return Collections.emptyList();
         }
-        HashMap <Integer, Integer> candidates = new HashMap<>();
-        for (Film film : likeStorage.getFilmLikes(userId)) {
-            for (User user : likeStorage.getLikesFromDb(film.getId())) {
-                if (user.getId() != userId) {
-                    candidates.put(user.getId(), candidates.getOrDefault(user.getId(), 0) + 1);
-                }
-            }
-        }
-        Integer candidateId = null;
-        for (Map.Entry<Integer, Integer> entry : candidates.entrySet()) {
-            if (candidateId == null || entry.getValue() > candidates.get(candidateId)) {
-                candidateId = entry.getKey();
-            }
-        }
+        Integer candidateId = filmLikes.stream()
+                .flatMap(film -> likeStorage.getLikesFromDb(film.getId()).stream())
+                .filter(user -> user.getId() != userId)
+                .collect(Collectors.groupingBy(User::getId, Collectors.counting()))
+                .entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(null);
         if (candidateId == null) {
             return Collections.emptyList();
         }
         return likeStorage.getFilmLikes(candidateId).stream()
-                .filter(film -> !likeStorage.getFilmLikes(userId).contains(film))
-                .collect(Collectors.toList());
-    }*/
-
-    @Override
-    public List<Film> getRecommendations(Integer userId) {
-        getUserById(userId); // Проверяем есть ли такой пользователь
-        if (likeStorage.getFilmLikes(userId).isEmpty()) { // Если у пользователя нет лайков, возвращаем пустой список
-            return Collections.emptyList();
-        }
-        // Находим пользователя с максимальным совпадением по лайкам
-        Integer candidateId = likeStorage.getFilmLikes(userId).stream() // Создаем поток фильмов, которые лайкнул User
-                // Для каждого фильма получаем список пользователей, которые лайкнули фильм и объединяем в один поток
-                .flatMap(film -> likeStorage.getLikesFromDb(film.getId()).stream())
-                // Фильтруем поток, исключая пользователя с userId
-                .filter(user -> user.getId() != userId)
-                // Группируем пользователей по их id и подсчитываем количество пользователей в каждой группе
-                .collect(Collectors.groupingBy(User::getId, Collectors.counting()))
-                // Преобразуем Map в набор записей, где каждая запись представляет собой пару ключ-значение
-                .entrySet().stream()
-                // Находим запись с максимальным количеством лайков
-                .max(Map.Entry.comparingByValue())
-                // Преобразуем найденную запись в ключ этой записи - id пользователя
-                .map(Map.Entry::getKey)
-                // Если в потоке не было найдено ни одной записи, то присваиваем значение null
-                .orElse(null);
-        if (candidateId == null) { // Если нет кандидатов с одинаковыми лайками, возвращаем пустой список
-            return Collections.emptyList();
-        }
-        return likeStorage.getFilmLikes(candidateId).stream()
-                // Фильтруем поток, исключая фильмы, которые лайкнул пользователь
-                .filter(film -> !likeStorage.getFilmLikes(userId).contains(film))
+                .filter(film -> !filmLikes.contains(film))
                 .collect(Collectors.toList());
     }
 
