@@ -80,13 +80,13 @@ public class ReviewDbStorage implements ReviewStorage {
     @Override
     public List<Review> getAllReviews(Integer count) {
         log.info("attempt to get all reviews from database, count = {}", count);
-        return jo.query("SELECT * FROM reviews ORDER BY useful LIMIT(?);", mapper, count);
+        return jo.query("SELECT * FROM reviews ORDER BY useful DESC LIMIT(?);", mapper, count);
     }
 
     @Override
     public List<Review> getAllReviewsByFilmId(Integer filmId, Integer count) {
         log.info("attempt to get reviews for film with id = {}", filmId);
         return jo.query("SELECT * FROM reviews WHERE film_id = ?" +
-                " ORDER BY useful LIMIT(?);", mapper, filmId, count);
+                " ORDER BY useful DESC LIMIT(?);", mapper, filmId, count);
     }
 }
