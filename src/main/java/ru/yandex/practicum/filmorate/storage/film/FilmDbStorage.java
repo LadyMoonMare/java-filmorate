@@ -11,7 +11,9 @@ import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -143,5 +145,59 @@ public class FilmDbStorage implements FilmStorage {
         } else {
             return jdbcTemplate.query(sqlSearchByDirector, filmRowMapper, "%" + query + "%");
         }
+    }
+
+    @Override
+    public List<Film> getTopPopularWithFilter(Integer count, Integer year, Integer genreId) {
+        Map<String, Object> param = new HashMap<>();
+
+        String concatJoin;
+        String concatWhere;
+        String concatLimit;
+        if (year != null && genreId != null) {
+            concatJoin = "JOIN FILM_GENRES ON FILMS.FILM_ID = FILM_GENRES.FILM_ID \n";
+            concatWhere = "WHERE YEAR(FILMS.RELEASE_DATE) = :year AND FILM_GENRES.GENRE_ID = :genreId \n";
+            param.put("year", year);
+            param.put("genreId", genreId);
+        } else if (year == null && genreId != null) {
+            concatJoin = "JOIN FILM_GENRES ON FILMS.FILM_ID = FILM_GENRES.FILM_ID \n";
+            concatWhere = "WHERE FILM_GENRES.GENRE_ID = :genreId \n";
+            param.put("genreId", genreId);
+        } else if (year != null) {
+            concatJoin = " \n";
+            concatWhere = "WHERE YEAR(FILMS.RELEASE_DATE) = :year \n";
+            param.put("year", year);
+        } else {
+            concatJoin = " \n";
+            concatWhere = " \n";
+        }
+        if (count != null) {
+            concatLimit = """
+                    LIMIT :count ;
+                    """;
+            param.put("count", count);
+        } else {
+            concatLimit = """
+                    ";"
+                    """;
+        }
+        String baseSql = """
+                SELECT f.id, f.title, f.description, f.releaseDate, f.duration, f.mpa_id, mpa.rating
+                FROM films f
+                JOIN mpa ON f.mpa_id = mpa.mpa_id
+                LEFT JOIN film_director fd ON f.id = fd.film_id
+                LEFT JOIN directors d ON fd.director_id = d.id
+                LEFT JOIN LIKES ON FILMS.FILM_ID = LIKES.FILM_ID
+                JOIN RATINGS ON FILMS.RATING_ID = RATINGS.RATING_ID
+                """;
+
+        String bodySql = """
+                GROUP BY FILMS.FILM_ID
+                ORDER BY count(LIKES.FILM_ID) DESC
+                """;
+
+        String finalSql = baseSql + concatJoin + concatWhere + bodySql + concatLimit;
+
+        return jdbcTemplate.query(finalSql, filmRowMapper);
     }
 }
