@@ -41,12 +41,12 @@ content VARCHAR(200),
 is_positive BOOLEAN,
 user_id INTEGER,
 film_id INTEGER,
-useful INTEGER DEFAULT 0
+useful INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS like_reviews (
-    review_id INT REFERENCES reviews(id),
-    user_id INT REFERENCES app_users(id),
+    review_id INT REFERENCES reviews(id) ON DELETE CASCADE,
+    user_id INT REFERENCES app_users(id) ON DELETE CASCADE,
     is_like BOOLEAN
 );
 

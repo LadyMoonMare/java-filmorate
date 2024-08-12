@@ -24,15 +24,15 @@ public class ReviewServiceImpl implements ReviewService {
     public Review addReview(Review review) {
         fs.findFilmById(review.getFilmId());
         us.findUserById(review.getUserId());
+
         return rs.addReview(review);
     }
 
     @Override
     public Review updateReview(Review review) {
-        //getReview(review.getId()); странно, однако тесты в постмане считают, что такой валидации
-        // быть не должно, update не по id
         fs.findFilmById(review.getFilmId());
         us.findUserById(review.getUserId());
+
         review.setReviewId(rs.findReviewIdByParams(review.getFilmId(), review.getUserId()));
         return rs.updateReview(review);
     }
@@ -60,46 +60,46 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public void manageLikesAndDislikes(Integer id, Integer userId, String type) {
-        getReview(id);
+    public void addLike(Integer id, Integer userId) {
+        Review review = getReview(id);
         us.findUserById(userId);
-
-        switch (type) {
-            case "addLike":
-                log.info("attempt to add like to review with id = {} by user with id = {}",
-                        id, userId);
-                ls.addLikeToReview(id, userId);
-
-                setUsefulForReview(true,id);
-            case "addDislike":
-                log.info("attempt to add dislike to review with id = {} by user with id = {}",
-                        id, userId);
-                ls.addDislikeToReview(id, userId);
-                setUsefulForReview(false, id);
-            case "deleteLike":
-                log.info("attempt to remove like from review with id = {} by user with id = {}",
-                        id, userId);
-                ls.removeLike(id, userId);
-                setUsefulForReview(false, id);
-            case "deleteDislike":
-                log.info("attempt to remove dislike from review with id = {} by user with id = {}",
-                        id, userId);
-                ls.deleteDislikeFromReview(id, userId);
-                setUsefulForReview(true, id);
-        }
+        review.setUseful(review.getUseful() + 1);
+        log.info("attempt to add like to review with id = {} by user with id = {}",
+                id, userId);
+        ls.addLikeToReview(id, userId);
+        rs.updateReview(review);
     }
 
-    public void setUsefulForReview(boolean isLike, Integer reviewId) {
-        Review review = getReview(reviewId);
-        if (isLike) {
-            log.info("review id = {} get useful {} + 1", reviewId, review.getUseful());
-            review.setUseful(review.getUseful() + 1);
-            log.info("new useful {}", review.getUseful());
-        } else {
-            log.info("review id = {} get useful {} -1", reviewId, review.getUseful());
-            review.setUseful(review.getUseful() - 1);
-            log.info("new useful {}", review.getUseful());
-        }
+    @Override
+    public void addDislike(Integer id, Integer userId) {
+        Review review = getReview(id);
+        us.findUserById(userId);
+        review.setUseful(review.getUseful() - 1);
+        log.info("attempt to add dislike to review with id = {} by user with id = {}",
+                id, userId);
+        ls.addDislikeToReview(id, userId);
+        rs.updateReview(review);
+    }
+
+    @Override
+    public void deleteLike(Integer id, Integer userId) {
+        Review review = getReview(id);
+        us.findUserById(userId);
+        review.setUseful(review.getUseful() - 1);
+        log.info("attempt to remove like from review with id = {} by user with id = {}",
+                id, userId);
+        ls.deleteLikeFromReview(id, userId);
+        rs.updateReview(review);
+    }
+
+    @Override
+    public void deleteDislike(Integer id, Integer userId) {
+        Review review = getReview(id);
+        us.findUserById(userId);
+        review.setUseful(review.getUseful() + 1);
+        log.info("attempt to remove dislike from review with id = {} by user with id = {}",
+                id, userId);
+        ls.deleteDislikeFromReview(id, userId);
         rs.updateReview(review);
     }
 }
