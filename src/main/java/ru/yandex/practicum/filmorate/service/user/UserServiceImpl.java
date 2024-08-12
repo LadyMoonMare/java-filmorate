@@ -51,9 +51,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUserById(Integer id) {
-        User user = userStorage
-                .findUserById(id)
-                .orElseThrow(() -> new DataNotFoundException(String.format("User with id %s not found", id)));
+        getUserById(id);
         userStorage.deleteUserById(id);
     }
 

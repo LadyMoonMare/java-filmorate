@@ -30,9 +30,9 @@ genre_id INTEGER);
 CREATE TABLE IF NOT EXISTS likes(
 film_id INTEGER,
 user_id INTEGER
-FOREIGN KEY (film_id) REFERENCES films (id) ON DELETE CASCADE,
-FOREIGN KEY (user_id) REFERENCES app_user (id) ON DELETE CASCADE,
-primary key (film_id, user_id)
+--FOREIGN KEY (film_id) REFERENCES films (id) ON DELETE CASCADE,
+--FOREIGN KEY (user_id) REFERENCES app_user (id) ON DELETE CASCADE,
+--primary key (film_id, user_id)
 );
 
 CREATE TABLE IF NOT EXISTS friends(
