@@ -62,6 +62,12 @@ public class FilmController {
     }
 
     @Validated
+    @DeleteMapping("/{id}")
+    public void deleteFilmById(@PathVariable @Positive Integer id) {
+        filmService.deleteFilmById(id);
+    }
+
+    @Validated
     @PutMapping("/{id}/like/{userId}")
     public void addLike(@PathVariable @Positive Integer id,
                         @PathVariable @Positive Integer userId) {
@@ -142,7 +148,6 @@ public class FilmController {
             log.warn("Data error - invalid mpa id {}", film.getMpa().getId());
             throw new ValidationException("Invalid mpa id");
         }
-
         if (film.getGenres() != null) {
             for (Genre genre : film.getGenres()) {
                 if (genre.getId() < 1 || genre.getId() > gs.getNumberOf()) {
