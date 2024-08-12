@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -108,10 +110,23 @@ public class FilmController {
         return filmService.getCommonFilms(userId, friendId);
     }
 
+    @Validated
+    @GetMapping("search")
+    public List<Film> searchFilms(@RequestParam() @NotBlank String query, @RequestParam @NotNull List<String> by) {
+        log.info("Получили запрос на поиск фильмов. GET films/search/?query={}&by={}", query, by);
+        // Проверка, что хотя бы один параметр поиска указан
+        if (!by.contains("title") && !by.contains("director")) {
+            log.warn("Праметры поиска 'by' указаны некорректно: {}.", by);
+            throw new ValidationException("Параметр поиска указан некорректно. " +
+                                          "Ожидаем 'title' или 'director', а получили " + by);
+        }
+        final List<Film> films = filmService.searchFilms(query, by);
+        log.info("В ответ на запрос GET films/search/?query={}&by={} возвращаем фильмы {}", query, by, films);
+        return films;
+    }
+
     private void validateFilm(Film film) {
         if (film.getReleaseDate().isBefore(FIRST_CINEMA_DATE)) {
-//           В новых тестах дата релиза в будущем должна быть допустима, закомментировал строку
-//           || film.getReleaseDate().isAfter(LocalDate.now()))
             log.warn("Data error - invalid release date {}", film.getReleaseDate());
             throw new ValidationException("Invalid date");
         } else if (film.getDuration().toMinutes() <= 0) {
@@ -130,5 +145,4 @@ public class FilmController {
             }
         }
     }
-
 }

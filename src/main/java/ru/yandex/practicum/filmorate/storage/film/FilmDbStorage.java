@@ -13,7 +13,8 @@ import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -96,20 +97,64 @@ public class FilmDbStorage implements FilmStorage {
 
         //SQL-запрос с динамическим ORDER BY в зависимости от запроса
         final String sql = String.format("""
-               SELECT f.id, f.title, f.description, f.releaseDate, f.duration, f.mpa_id, mpa.rating, l.like_count
-               FROM films AS f
-               JOIN film_director AS fd
-               ON f.id = fd.film_id
-               JOIN mpa on f.mpa_id = mpa.mpa_id
-               LEFT JOIN (
-                   SELECT film_id, COUNT(*) AS like_count
-                   FROM likes
-                   GROUP BY film_id
-                   ) l ON f.id = l.film_id
-                   WHERE fd.director_id = ?
-               ORDER BY %s DESC
-               """, sortField);
+                SELECT f.id, f.title, f.description, f.releaseDate, f.duration, f.mpa_id, mpa.rating, l.like_count
+                FROM films AS f
+                JOIN film_director AS fd ON f.id = fd.film_id
+                JOIN mpa ON f.mpa_id = mpa.mpa_id
+                LEFT JOIN (
+                    SELECT film_id, COUNT(*) AS like_count
+                    FROM likes
+                    GROUP BY film_id
+                    ) l ON f.id = l.film_id
+                WHERE fd.director_id = ?
+                ORDER BY %s DESC
+                """, sortField);
 
         return jdbcTemplate.query(sql, new FilmRowMapper(), directorId);
+    }
+
+    @Override
+    public List<Film> searchFilmsByParameter(String query, boolean searchByTitle, boolean searchByDirector) {
+        final String sqlSearchByTitle = """
+                SELECT f.id, f.title, f.description, f.releaseDate, f.duration, f.mpa_id, mpa.rating, COUNT(l.user_id) AS likes
+                FROM films f
+                JOIN mpa ON f.mpa_id = mpa.mpa_id
+                LEFT JOIN likes l ON f.id = l.film_id
+                WHERE LOWER(f.title) LIKE LOWER(?)
+                GROUP BY f.id, f.title, f.description, f.releaseDate, f.duration, f.mpa_id, mpa.rating
+                ORDER BY likes DESC
+                """;
+
+        final String sqlSearchByDirector = """
+                SELECT f.id, f.title, f.description, f.releaseDate, f.duration, f.mpa_id, mpa.rating, COUNT(l.user_id) AS likes
+                FROM films f
+                JOIN mpa ON f.mpa_id = mpa.mpa_id
+                LEFT JOIN film_director fd ON f.id = fd.film_id
+                LEFT JOIN directors d ON fd.director_id = d.id
+                LEFT JOIN likes l ON f.id = l.film_id
+                WHERE LOWER(d.name) LIKE LOWER(?)
+                GROUP BY f.id, f.title, f.description, f.releaseDate, f.duration, f.mpa_id, mpa.rating
+                ORDER BY likes DESC
+                """;
+
+        final String sqlSearchByTitleAndDirector = """
+                SELECT f.id, f.title, f.description, f.releaseDate, f.duration, f.mpa_id, mpa.rating, COUNT(l.user_id) AS likes
+                FROM films f
+                JOIN mpa ON f.mpa_id = mpa.mpa_id
+                LEFT JOIN film_director fd ON f.id = fd.film_id
+                LEFT JOIN directors d ON fd.director_id = d.id
+                LEFT JOIN likes l ON f.id = l.film_id
+                WHERE LOWER(f.title) LIKE LOWER(?) OR LOWER(d.name) LIKE LOWER(?)
+                GROUP BY f.id, f.title, f.description, f.releaseDate, f.duration, f.mpa_id, mpa.rating
+                ORDER BY likes DESC
+                """;
+
+        if (searchByTitle && searchByDirector) {
+            return jdbcTemplate.query(sqlSearchByTitleAndDirector, filmRowMapper, "%" + query + "%", "%" + query + "%");
+        } else if (searchByTitle) {
+            return jdbcTemplate.query(sqlSearchByTitle, filmRowMapper, "%" + query + "%");
+        } else {
+            return jdbcTemplate.query(sqlSearchByDirector, filmRowMapper, "%" + query + "%");
+        }
     }
 }

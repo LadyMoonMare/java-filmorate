@@ -13,7 +13,10 @@ import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.like.LikeStorage;
 import ru.yandex.practicum.filmorate.storage.mpa.MPAStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
-import java.util.*;
+
+import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -29,7 +32,7 @@ public class FilmServiceImpl implements FilmService {
     private final DirectorStorage directorStorage;
     private final UserStorage userStorage;
     // private final FriendsStorage friendsStorages;
-    private  final Comparator<Genre> comparator = new Comparator<Genre>() {
+    private final Comparator<Genre> comparator = new Comparator<Genre>() {
         @Override
         public int compare(Genre o1, Genre o2) {
             return o1.getId() - o2.getId();
@@ -172,4 +175,13 @@ public class FilmServiceImpl implements FilmService {
         return gs.loadGenres(commonFilms);
     }
 
+    @Override
+    public List<Film> searchFilms(String query, List<String> by) {
+        final boolean searchByTitle = by.contains("title");
+        final boolean searchByDirector = by.contains("director");
+        List<Film> searchedFilms = filmStorage.searchFilmsByParameter(query, searchByTitle, searchByDirector);
+        log.info("Получили фильмы из БД {}", searchedFilms);
+        searchedFilms = gs.loadGenres(searchedFilms);
+        return directorStorage.loadDirectors(searchedFilms);
+    }
 }
