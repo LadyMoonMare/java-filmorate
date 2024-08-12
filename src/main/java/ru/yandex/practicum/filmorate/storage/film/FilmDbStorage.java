@@ -193,8 +193,7 @@ public class FilmDbStorage implements FilmStorage {
 //        }
         final List<String> params = new ArrayList<>();
         String baseSql = """
-                SELECT films.id, films.title, films.description, films.releaseDate, films.duration, 
-                films.mpa_id, mpa.rating, genres.name, directors.name
+                SELECT films.id, films.title, films.description, films.releaseDate, films.duration, films.mpa_id, mpa.rating, genres.name, directors.name
                 FROM films
                 JOIN mpa ON films.mpa_id = mpa.mpa_id
                 LEFT JOIN film_genre ON films.id = film_genre.film_id
