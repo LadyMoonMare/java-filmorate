@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -116,6 +117,17 @@ public class FilmController {
         }
         final List<Film> films = filmService.searchFilms(query, by);
         log.info("В ответ на запрос GET films/search/?query={}&by={} возвращаем фильмы {}", query, by, films);
+        return films;
+    }
+
+    @Validated
+    @GetMapping("/popular?count={limit}&genreId={genreId}&year={year}")
+    public List<Film> getPopularFilms(@RequestParam(defaultValue = "10") @Min(0) Integer count,
+                                            @RequestParam(required = false) Integer genreId,
+                                            @RequestParam(required = false) @Min(1895) Integer year) {
+        log.info("Запрос на получение популярных фильмов");
+        List<Film> films = filmService.getPopular(count, genreId, year);
+        log.info("Отправлено {} фильмов", count);
         return films;
     }
 

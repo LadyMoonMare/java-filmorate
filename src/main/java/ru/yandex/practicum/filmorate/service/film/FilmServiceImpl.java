@@ -173,4 +173,9 @@ public class FilmServiceImpl implements FilmService {
         searchedFilms = gs.loadGenres(searchedFilms);
         return directorStorage.loadDirectors(searchedFilms);
     }
+
+    @Override
+    public List<Film> getPopular(Integer count, Integer genreId, Integer year) {
+        return filmStorage.getAllFilms();
+    }
 }
