@@ -32,7 +32,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public void deleteFilmById(Integer id) {
         final String sql = "DELETE FROM films WHERE id = ?";
-        int status = jdbcTemplate.update(sql, id);
+        jdbcTemplate.update(sql, id);
     }
 
     @Override

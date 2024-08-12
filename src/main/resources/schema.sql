@@ -29,11 +29,17 @@ genre_id INTEGER);
 
 CREATE TABLE IF NOT EXISTS likes(
 film_id INTEGER,
-user_id INTEGER);
+user_id INTEGER
+FOREIGN KEY (film_id) REFERENCES films (id) ON DELETE CASCADE,
+FOREIGN KEY (user_id) REFERENCES app_user (id) ON DELETE CASCADE
+);
 
 CREATE TABLE IF NOT EXISTS friends(
 user_id INTEGER,
-friend_id INTEGER);
+friend_id INTEGER
+FOREIGN KEY (friend_id) REFERENCES app_user (id) ON DELETE CASCADE,
+FOREIGN KEY (user_id) REFERENCES app_user (id) ON DELETE CASCADE
+);
 
 CREATE TABLE IF NOT EXISTS directors
 (
