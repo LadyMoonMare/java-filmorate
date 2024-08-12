@@ -3,8 +3,6 @@ package ru.yandex.practicum.filmorate.service.review;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.DataNotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.like.LikeStorage;
@@ -24,17 +22,18 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public Review addReview(Review review) {
-        isValid(review.getFilmId(), review.getUserId());
-        review.setUseful(0);
+        fs.findFilmById(review.getFilmId());
+        us.findUserById(review.getUserId());
         return rs.addReview(review);
     }
 
     @Override
     public Review updateReview(Review review) {
         //getReview(review.getId()); странно, однако тесты в постмане считают, что такой валидации
-        // быть не должно
-        isValid(review.getFilmId(), review.getUserId());
-        review.setUseful(0);
+        // быть не должно, update не по id
+        fs.findFilmById(review.getFilmId());
+        us.findUserById(review.getUserId());
+        review.setReviewId(rs.findReviewIdByParams(review.getFilmId(), review.getUserId()));
         return rs.updateReview(review);
     }
 
@@ -62,7 +61,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public void manageLikesAndDislikes(Integer id, Integer userId, String type) {
-        Review review = getReview(id);
+        getReview(id);
         us.findUserById(userId);
 
         switch (type) {
@@ -71,40 +70,36 @@ public class ReviewServiceImpl implements ReviewService {
                         id, userId);
                 ls.addLikeToReview(id, userId);
 
-                log.info("review id = {} get useful +1", id);
-                review.setUseful(getReview(id).getUseful() + 1);
+                setUsefulForReview(true,id);
             case "addDislike":
                 log.info("attempt to add dislike to review with id = {} by user with id = {}",
                         id, userId);
                 ls.addDislikeToReview(id, userId);
-
-                log.info("review id = {} get useful -1", id);
-                review.setUseful(getReview(id).getUseful() - 1);
+                setUsefulForReview(false, id);
             case "deleteLike":
                 log.info("attempt to remove like from review with id = {} by user with id = {}",
                         id, userId);
                 ls.removeLike(id, userId);
-
-                log.info("review id = {} get useful -1", id);
-                review.setUseful(getReview(id).getUseful() - 1);
+                setUsefulForReview(false, id);
             case "deleteDislike":
                 log.info("attempt to remove dislike from review with id = {} by user with id = {}",
                         id, userId);
                 ls.deleteDislikeFromReview(id, userId);
-
-                log.info("review id = {} get useful + 1", id);
-                review.setUseful(getReview(id).getUseful() + 1);
+                setUsefulForReview(true, id);
         }
-
-        rs.updateReview(review);
     }
 
-    public void isValid(Integer filmId, Integer userId) {
-        try {
-            fs.findFilmById(filmId);
-            us.findUserById(userId);
-        } catch (DataNotFoundException e) {
-            throw new ValidationException("Invalid film or user id for review");
+    public void setUsefulForReview(boolean isLike, Integer reviewId) {
+        Review review = getReview(reviewId);
+        if (isLike) {
+            log.info("review id = {} get useful {} + 1", reviewId, review.getUseful());
+            review.setUseful(review.getUseful() + 1);
+            log.info("new useful {}", review.getUseful());
+        } else {
+            log.info("review id = {} get useful {} -1", reviewId, review.getUseful());
+            review.setUseful(review.getUseful() - 1);
+            log.info("new useful {}", review.getUseful());
         }
+        rs.updateReview(review);
     }
 }

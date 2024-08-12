@@ -33,14 +33,14 @@ public class ReviewController {
 
     @Validated
     @DeleteMapping("/{id}")
-    public void deleteReview(@PathVariable @Positive Integer id) {
+    public void deleteReview(@PathVariable Integer id) {
         log.info("attempt to delete review");
         rs.deleteReview(id);
     }
 
     @Validated
     @GetMapping("/{id}")
-    public Review getReview(@PathVariable @Positive Integer id) {
+    public Review getReview(@PathVariable Integer id) {
         log.info("attempt to get review by id = {}", id);
         return rs.getReview(id);
     }

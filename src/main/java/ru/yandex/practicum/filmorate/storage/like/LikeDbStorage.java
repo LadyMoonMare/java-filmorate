@@ -50,26 +50,26 @@ public class LikeDbStorage implements LikeStorage {
 
     @Override
     public void addLikeToReview(Integer id, Integer userId) {
-        jdbcTemplate.update("INSERT INTO review_likes (review_id, user_id, is_like) VALUES (?,?," +
-                        " true);", id, userId);
+        jdbcTemplate.update("INSERT INTO like_reviews (review_id, user_id, is_like) VALUES (?,?," +
+                        " ?);", id, userId, true);
     }
 
     @Override
     public void addDislikeToReview(Integer id, Integer userId) {
-        jdbcTemplate.update("INSERT INTO review_likes (review_id, user_id, is_like) VALUES (?,?," +
-                        "false);", id, userId);
+        jdbcTemplate.update("INSERT INTO like_reviews (review_id, user_id, is_like) VALUES (?,?," +
+                        " ?);", id, userId, false);
     }
 
     @Override
     public void deleteLikeFromReview(Integer id, Integer userId) {
-        jdbcTemplate.update("DELETE FROM review_likes WHERE review_id = ? AND user_id = ? " +
-                "AND is_like = true", id, userId);
+        jdbcTemplate.update("DELETE FROM like_reviews WHERE review_id = ? AND user_id = ? " +
+                "AND is_like = ?", id, userId,true);
     }
 
     @Override
     public void deleteDislikeFromReview(Integer id, Integer userId) {
-        jdbcTemplate.update("DELETE FROM review_likes WHERE review_id = ? AND user_id = ? " +
-                "AND is_like = false", id, userId);
+        jdbcTemplate.update("DELETE FROM like_reviews WHERE review_id = ? AND user_id = ? " +
+                "AND is_like = ?", id, userId, false);
     }
 
 }

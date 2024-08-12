@@ -28,17 +28,17 @@ public class ReviewDbStorage implements ReviewStorage {
 
         jo.update(connection -> {
             PreparedStatement ps = connection.prepareStatement("INSERT INTO reviews(content, " +
-                    "film_id, is_positive, useful, user_id) " +
+                    "is_positive, film_id, user_id, useful) " +
                     "VALUES(?,?,?,?,?);", Statement.RETURN_GENERATED_KEYS);
             ps.setObject(1, review.getContent());
-            ps.setObject(2, review.getFilmId());
-            ps.setObject(3, review.getIsPositive());
-            ps.setObject(4, review.getUseful());
-            ps.setObject(5, review.getUserId());
+            ps.setObject(2, review.getIsPositive());
+            ps.setObject(3, review.getFilmId());
+            ps.setObject(4, review.getUserId());
+            ps.setObject(5, review.getUseful());
             return ps;
         }, kh);
 
-        review.setId(kh.getKeyAs(Integer.class));
+        review.setReviewId(kh.getKeyAs(Integer.class));
 
         log.info("review successfully added to database");
         return review;
@@ -46,7 +46,7 @@ public class ReviewDbStorage implements ReviewStorage {
 
     @Override
     public Review updateReview(Review review) {
-        log.info("attempt to update review with id = {} in database", review.getId());
+        log.info("attempt to update review with id = {} in database", review.getReviewId());
         jo.update("UPDATE reviews SET content = ?,film_id = ?, is_positive = ?," +
                         "user_id = ?, useful = ? WHERE id = ?;",
                 review.getContent(),
@@ -54,7 +54,7 @@ public class ReviewDbStorage implements ReviewStorage {
                 review.getIsPositive(),
                 review.getUserId(),
                 review.getUseful(),
-                review.getId());
+                review.getReviewId());
         log.info("update review success");
         return review;
     }
@@ -89,4 +89,12 @@ public class ReviewDbStorage implements ReviewStorage {
         return jo.query("SELECT * FROM reviews WHERE film_id = ?" +
                 " ORDER BY useful DESC LIMIT(?);", mapper, filmId, count);
     }
+
+    @Override
+    public Integer findReviewIdByParams(Integer filmId, Integer userId) {
+        log.info("attempt to get review id by params filmId = {}, userId = {}", filmId, userId);
+        return jo.queryForObject("SELECT id FROM reviews WHERE film_id = ?" +
+                " AND user_id = ?", Integer.class, filmId, userId);
+    }
+
 }

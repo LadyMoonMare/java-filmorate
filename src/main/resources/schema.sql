@@ -41,14 +41,13 @@ content VARCHAR(200),
 is_positive BOOLEAN,
 user_id INTEGER,
 film_id INTEGER,
-useful INTEGER
+useful INTEGER DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS like_reviews (
     review_id INT REFERENCES reviews(id),
     user_id INT REFERENCES app_users(id),
-    is_like BOOLEAN,
-    PRIMARY KEY(review_id, user_id)
+    is_like BOOLEAN
 );
 
 CREATE TABLE IF NOT EXISTS directors
