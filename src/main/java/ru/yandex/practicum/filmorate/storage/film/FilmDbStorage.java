@@ -11,10 +11,7 @@ import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -149,55 +146,53 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getTopPopularWithFilter(Integer count, Integer year, Integer genreId) {
-        Map<String, Object> param = new HashMap<>();
-
-        String concatJoin;
-        String concatWhere;
-        String concatLimit;
-        if (year != null && genreId != null) {
-            concatJoin = "JOIN FILM_GENRES ON FILMS.FILM_ID = FILM_GENRES.FILM_ID \n";
-            concatWhere = "WHERE YEAR(FILMS.RELEASE_DATE) = :year AND FILM_GENRES.GENRE_ID = :genreId \n";
-            param.put("year", year);
-            param.put("genreId", genreId);
-        } else if (year == null && genreId != null) {
-            concatJoin = "JOIN FILM_GENRES ON FILMS.FILM_ID = FILM_GENRES.FILM_ID \n";
-            concatWhere = "WHERE FILM_GENRES.GENRE_ID = :genreId \n";
-            param.put("genreId", genreId);
-        } else if (year != null) {
-            concatJoin = " \n";
-            concatWhere = "WHERE YEAR(FILMS.RELEASE_DATE) = :year \n";
-            param.put("year", year);
-        } else {
-            concatJoin = " \n";
-            concatWhere = " \n";
-        }
-        if (count != null) {
-            concatLimit = """
-                    LIMIT :count ;
-                    """;
-            param.put("count", count);
-        } else {
-            concatLimit = """
-                    ";"
-                    """;
-        }
+//        Map<String, Object> param = new HashMap<>();
+//
+//        String concatJoin;
+//        String concatWhere;
+//        String concatLimit;
+//        if (year != null && genreId != null) {
+//            concatJoin = "JOIN FILM_GENRES ON FILMS.FILM_ID = FILM_GENRES.FILM_ID \n";
+//            concatWhere = "WHERE YEAR(FILMS.RELEASE_DATE) = :year AND FILM_GENRES.GENRE_ID = :genreId \n";
+//            param.put("year", year);
+//            param.put("genreId", genreId);
+//        } else if (year == null && genreId != null) {
+//            concatJoin = "JOIN FILM_GENRES ON FILMS.FILM_ID = FILM_GENRES.FILM_ID \n";
+//            concatWhere = "WHERE FILM_GENRES.GENRE_ID = :genreId \n";
+//            param.put("genreId", genreId);
+//        } else if (year != null) {
+//            concatJoin = " \n";
+//            concatWhere = "WHERE YEAR(FILMS.RELEASE_DATE) = :year \n";
+//            param.put("year", year);
+//        } else {
+//            concatJoin = " \n";
+//            concatWhere = " \n";
+//        }
+//        if (count != null) {
+//            concatLimit = """
+//                    LIMIT :count ;
+//                    """;
+//            param.put("count", count);
+//        } else {
+//            concatLimit = """
+//                    ";"
+//                    """;
+//        }
+        final List<String> params = new ArrayList<>();
         String baseSql = """
-                SELECT f.id, f.title, f.description, f.releaseDate, f.duration, f.mpa_id, mpa.rating
-                FROM films f
-                JOIN mpa ON f.mpa_id = mpa.mpa_id
+                SELECT films.id, films.title, films.description, films.releaseDate, films.duration, 
+                films.mpa_id, mpa.rating, genres.name, directors.name
+                FROM films
+                JOIN mpa ON films.mpa_id = mpa.mpa_id
+                LEFT JOIN film_genre ON films.id = film_genre.film_id
+                LEFT JOIN genres ON film_genre.genre_id = genres.id
                 LEFT JOIN film_director fd ON f.id = fd.film_id
                 LEFT JOIN directors d ON fd.director_id = d.id
-                LEFT JOIN LIKES ON FILMS.FILM_ID = LIKES.FILM_ID
-                JOIN RATINGS ON FILMS.RATING_ID = RATINGS.RATING_ID
+                LEFT JOIN likes l ON f.id = l.film_id
+                WHERE films.releaseDate = (?)
+                GROUP BY films.id
+                ORDER BY count(l.user_id) DESC LIMIT (?)
                 """;
-
-        String bodySql = """
-                GROUP BY FILMS.FILM_ID
-                ORDER BY count(LIKES.FILM_ID) DESC
-                """;
-
-        String finalSql = baseSql + concatJoin + concatWhere + bodySql + concatLimit;
-
-        return jdbcTemplate.query(finalSql, filmRowMapper);
+        return jdbcTemplate.query(baseSql, filmRowMapper, "%" + year + "%", "%" + count + "%");
     }
 }

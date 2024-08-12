@@ -176,6 +176,6 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public List<Film> getPopular(Integer count, Integer genreId, Integer year) {
-        return filmStorage.getAllFilms();
+        return filmStorage.getTopPopularWithFilter(count, genreId, year);
     }
 }
