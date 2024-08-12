@@ -97,6 +97,12 @@ public class FilmServiceImpl implements FilmService {
     }
 
     @Override
+    public void deleteFilmById(Integer id) {
+        getFilmById(id);
+        filmStorage.deleteFilmById(id);
+    }
+
+    @Override
     public void addLike(Integer id, Integer userId) {
         ls.addLike(id, userId);
         log.info("user {} successfully liked film {}", userId, id);

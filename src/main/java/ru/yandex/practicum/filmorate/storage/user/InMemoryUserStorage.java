@@ -53,6 +53,11 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
+    public void deleteUserById(Integer id) {
+        log.warn("delete User");
+    }
+
+    @Override
     public Optional<User> findUserById(Integer id) {
         return Optional.ofNullable(users.get(id));
     }
