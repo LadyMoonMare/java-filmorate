@@ -159,25 +159,26 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getTopPopularWithFilter(Integer count, Integer year, Integer genreId) {
-        //final List<String> params = new ArrayList<>();
+        //final List<String> params = new ArrayList<>();WHERE YEAR(films.releaseDate) = ?
         try {
         String baseSql = """
-                SELECT films.id, films.title, films.description, films.releaseDate, films.duration, films.mpa_id, mpa.rating, genres.name, directors.name
+                SELECT films.id, films.title, films.description, films.releaseDate, films.duration, films.mpa_id, mpa.rating,genres.id, genres.name, directors.name
                 FROM films
                 JOIN mpa ON films.mpa_id = mpa.mpa_id
                 LEFT JOIN film_genre ON films.id = film_genre.film_id
                 LEFT JOIN genres ON film_genre.genre_id = genres.id
                 LEFT JOIN film_director fd ON f.id = fd.film_id
                 LEFT JOIN directors d ON fd.director_id = d.id
-                LEFT JOIN likes l ON f.id = l.film_id
-                WHERE YEAR(films.releaseDate) = ?
+                LEFT JOIN likes ON films.id = likes.film_id
+                WHERE genres.id = ?
                 GROUP BY films.id
                 ORDER BY count(l.user_id) DESC LIMIT ?
                 """;
-        return jdbcTemplate.query(baseSql, filmRowMapper, "%" + year + "%", "%" + count + "%");
+        return jdbcTemplate.query(baseSql, filmRowMapper, "%" + genreId + "%", "%" + count + "%");
     } catch (EmptyResultDataAccessException e) {
         log.warn("Films not found");
         throw new DataNotFoundException("Films not found");
     }
     }
+
 }
