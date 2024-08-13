@@ -160,6 +160,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> getTopPopularWithFilter(Integer count, Integer year, Integer genreId) {
         //final List<String> params = new ArrayList<>();
+        try {
         String baseSql = """
                 SELECT films.id, films.title, films.description, films.releaseDate, films.duration, films.mpa_id, mpa.rating, genres.name, directors.name
                 FROM films
@@ -174,5 +175,9 @@ public class FilmDbStorage implements FilmStorage {
                 ORDER BY count(l.user_id) DESC LIMIT (?)
                 """;
         return jdbcTemplate.query(baseSql, filmRowMapper, "%" + year + "%", "%" + count + "%");
+    } catch (EmptyResultDataAccessException e) {
+        log.warn("Films not found");
+        throw new DataNotFoundException("Films not found");
+    }
     }
 }
