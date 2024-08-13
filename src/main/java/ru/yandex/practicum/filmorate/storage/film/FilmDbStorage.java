@@ -170,9 +170,9 @@ public class FilmDbStorage implements FilmStorage {
                 LEFT JOIN film_director fd ON f.id = fd.film_id
                 LEFT JOIN directors d ON fd.director_id = d.id
                 LEFT JOIN likes l ON f.id = l.film_id
-                WHERE films.releaseDate = (?)
+                WHERE YEAR(films.releaseDate) = ?
                 GROUP BY films.id
-                ORDER BY count(l.user_id) DESC LIMIT (?)
+                ORDER BY count(l.user_id) DESC LIMIT ?
                 """;
         return jdbcTemplate.query(baseSql, filmRowMapper, "%" + year + "%", "%" + count + "%");
     } catch (EmptyResultDataAccessException e) {
