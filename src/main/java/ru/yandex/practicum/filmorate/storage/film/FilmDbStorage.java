@@ -159,38 +159,6 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getTopPopularWithFilter(Integer count, Integer year, Integer genreId) {
-//        Map<String, Object> param = new HashMap<>();
-//
-//        String concatJoin;
-//        String concatWhere;
-//        String concatLimit;
-//        if (year != null && genreId != null) {
-//            concatJoin = "JOIN FILM_GENRES ON FILMS.FILM_ID = FILM_GENRES.FILM_ID \n";
-//            concatWhere = "WHERE YEAR(FILMS.RELEASE_DATE) = :year AND FILM_GENRES.GENRE_ID = :genreId \n";
-//            param.put("year", year);
-//            param.put("genreId", genreId);
-//        } else if (year == null && genreId != null) {
-//            concatJoin = "JOIN FILM_GENRES ON FILMS.FILM_ID = FILM_GENRES.FILM_ID \n";
-//            concatWhere = "WHERE FILM_GENRES.GENRE_ID = :genreId \n";
-//            param.put("genreId", genreId);
-//        } else if (year != null) {
-//            concatJoin = " \n";
-//            concatWhere = "WHERE YEAR(FILMS.RELEASE_DATE) = :year \n";
-//            param.put("year", year);
-//        } else {
-//            concatJoin = " \n";
-//            concatWhere = " \n";
-//        }
-//        if (count != null) {
-//            concatLimit = """
-//                    LIMIT :count ;
-//                    """;
-//            param.put("count", count);
-//        } else {
-//            concatLimit = """
-//                    ";"
-//                    """;
-//        }
         final List<String> params = new ArrayList<>();
         String baseSql = """
                 SELECT films.id, films.title, films.description, films.releaseDate, films.duration, films.mpa_id, mpa.rating, genres.name, directors.name
