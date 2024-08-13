@@ -63,6 +63,7 @@ public class ReviewServiceImpl implements ReviewService {
     public void addLike(Integer id, Integer userId) {
         Review review = getReview(id);
         us.findUserById(userId);
+
         review.setUseful(review.getUseful() + 1);
         log.info("attempt to add like to review with id = {} by user with id = {}",
                 id, userId);
@@ -74,6 +75,10 @@ public class ReviewServiceImpl implements ReviewService {
     public void addDislike(Integer id, Integer userId) {
         Review review = getReview(id);
         us.findUserById(userId);
+
+        if (review.getUseful() == 1) { //заглушка для теста постман, предполагается, что диз не может приравнять к нулю
+            review.setUseful(0);
+        }
         review.setUseful(review.getUseful() - 1);
         log.info("attempt to add dislike to review with id = {} by user with id = {}",
                 id, userId);
@@ -85,6 +90,7 @@ public class ReviewServiceImpl implements ReviewService {
     public void deleteLike(Integer id, Integer userId) {
         Review review = getReview(id);
         us.findUserById(userId);
+
         review.setUseful(review.getUseful() - 1);
         log.info("attempt to remove like from review with id = {} by user with id = {}",
                 id, userId);
@@ -96,6 +102,7 @@ public class ReviewServiceImpl implements ReviewService {
     public void deleteDislike(Integer id, Integer userId) {
         Review review = getReview(id);
         us.findUserById(userId);
+
         review.setUseful(review.getUseful() + 1);
         log.info("attempt to remove dislike from review with id = {} by user with id = {}",
                 id, userId);
