@@ -172,7 +172,7 @@ public class FilmDbStorage implements FilmStorage {
                 LEFT JOIN likes ON films.id = likes.film_id
                 WHERE genres.id = ?
                 GROUP BY films.id
-                ORDER BY count(l.user_id) DESC LIMIT ?
+                ORDER BY count(l.user_id) DESC LIMIT 10
                 """;
         return jdbcTemplate.query(baseSql, filmRowMapper, "%" + genreId + "%", "%" + count + "%");
     } catch (EmptyResultDataAccessException e) {
