@@ -15,6 +15,8 @@ public interface UserService {
 
     User getUserById(Integer id);
 
+    void deleteUserById(Integer id);
+
     List<User> getUserFriends(Integer id);
 
     void addFriend(Integer id, Integer friendId);

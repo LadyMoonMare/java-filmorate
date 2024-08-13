@@ -50,6 +50,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void deleteUserById(Integer id) {
+        getUserById(id);
+        userStorage.deleteUserById(id);
+    }
+
+    @Override
     public  List<User> getUserFriends(Integer id) {
         User user = getUserById(id);
         return fs.getFriendsFromDb(user.getId());
