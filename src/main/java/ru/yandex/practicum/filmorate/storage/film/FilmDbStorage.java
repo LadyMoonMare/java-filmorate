@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcOperations;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.DataNotFoundException;
@@ -160,25 +162,74 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> getTopPopularWithFilter(Integer count, Integer year, Integer genreId) {
         //final List<String> params = new ArrayList<>();WHERE YEAR(films.releaseDate) = ?
-        try {
-        String baseSql = """
-                SELECT films.id, films.title, films.description, films.releaseDate, films.duration, films.mpa_id, mpa.rating,genres.id, genres.name, directors.name
-                FROM films
-                JOIN mpa ON films.mpa_id = mpa.mpa_id
-                LEFT JOIN film_genre ON films.id = film_genre.film_id
-                LEFT JOIN genres ON film_genre.genre_id = genres.id
-                LEFT JOIN film_director fd ON f.id = fd.film_id
-                LEFT JOIN directors d ON fd.director_id = d.id
-                LEFT JOIN likes ON films.id = likes.film_id
-                WHERE genres.id = ?
-                GROUP BY films.id
-                ORDER BY count(l.user_id) DESC LIMIT 10
-                """;
-        return jdbcTemplate.query(baseSql, filmRowMapper, "%" + genreId + "%", "%" + count + "%");
-    } catch (EmptyResultDataAccessException e) {
-        log.warn("Films not found");
-        throw new DataNotFoundException("Films not found");
-    }
-    }
+//        String baseSql = """
+//                SELECT films.id, films.title, films.description, films.releaseDate, films.duration, films.mpa_id, mpa.rating, genres.id, genres.name, directors.name
+//                FROM films
+//                JOIN mpa ON films.mpa_id = mpa.mpa_id
+//                LEFT JOIN film_genre ON films.id = film_genre.film_id
+//                LEFT JOIN genres ON film_genre.genre_id = genres.id
+//                LEFT JOIN film_director fd ON f.id = fd.film_id
+//                LEFT JOIN directors d ON fd.director_id = d.id
+//                LEFT JOIN likes ON films.id = likes.film_id
+//                WHERE genres.id = ?
+//                GROUP BY films.id
+//                ORDER BY count(l.user_id) DESC LIMIT 10
+//                """;
+//        return jdbcTemplate.query(baseSql, filmRowMapper, "%" + genreId + "%", "%" + count + "%");
 
+        Map<String, Object> param = new HashMap<>();
+
+        String concatJoin;
+        String concatWhere;
+        String concatLimit;
+        if (year != null && genreId != null) {
+            concatJoin = "JOIN film_genre ON films.id = film_genre.film_id \n";
+            concatWhere = "WHERE YEAR(films.releaseDate) = :year AND film_genre.genre_id = :genreId \n";
+            param.put("year", year);
+            param.put("genreId", genreId);
+        } else if (year == null && genreId != null) {
+            concatJoin = "JOIN film_genre ON films.id = film_genre.film_id \n";
+            concatWhere = "WHERE film_genre.genre_id = :genreId \n";
+            param.put("genreId", genreId);
+        } else if (year != null) {
+            concatJoin = " \n";
+            concatWhere = "WHERE YEAR(films.releaseDate) = :year \n";
+            param.put("year", year);
+        } else {
+            concatJoin = " \n";
+            concatWhere = " \n";
+        }
+        if (count != null) {
+            concatLimit = """
+                    LIMIT :count ;
+                    """;
+            param.put("count", count);
+        } else {
+            concatLimit = """
+                    ";"
+                    """;
+        }
+        String baseSql = """
+                SELECT
+                    films.id,
+                    films.title,
+                    description,
+                    releaseDate,
+                    duration,
+                    films.mpa_id,
+                    mpa.rating AS RATING_NAME
+                FROM FILMS
+                         LEFT JOIN likes ON films.id = likes.film_id
+                         JOIN mpa ON films.mpa_id = mpa.mpa_id
+                """;
+
+        String bodySql = """
+                GROUP BY films.id
+                ORDER BY count(likes.film_id) DESC
+                """;
+
+        String finalSql = baseSql + concatJoin + concatWhere + bodySql + concatLimit;
+
+        return jdbcTemplate.query(finalSql, filmRowMapper);
+    }
 }
