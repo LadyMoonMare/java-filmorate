@@ -159,7 +159,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getTopPopularWithFilter(Integer count, Integer year, Integer genreId) {
-        final List<String> params = new ArrayList<>();
+        //final List<String> params = new ArrayList<>();
         String baseSql = """
                 SELECT films.id, films.title, films.description, films.releaseDate, films.duration, films.mpa_id, mpa.rating, genres.name, directors.name
                 FROM films
