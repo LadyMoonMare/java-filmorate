@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.UserRowMapper;
+
 import java.util.List;
 
 @Slf4j
@@ -48,4 +49,33 @@ public class LikeDbStorage implements LikeStorage {
         jdbcTemplate.update("DELETE FROM likes WHERE film_id = ? AND user_id = ?",id,userId);
     }
 
+    @Override
+    public void addLikeReview(Integer id, Integer userId) {
+        jdbcTemplate.update("INSERT INTO like_reviews (review_id, user_id, is_like) VALUES (?,?," +
+                        " ?);", id, userId, true);
+    }
+
+    @Override
+    public void addDislikeReview(Integer id, Integer userId) {
+        jdbcTemplate.update("INSERT INTO like_reviews (review_id, user_id, is_like) VALUES (?,?," +
+                        " ?);", id, userId, false);
+    }
+
+    @Override
+    public void deleteLikeReview(Integer id, Integer userId) {
+        jdbcTemplate.update("DELETE FROM like_reviews WHERE review_id = ? AND user_id = ? " +
+                "AND is_like = ?", id, userId,true);
+    }
+
+    @Override
+    public void deleteDislikeReview(Integer id, Integer userId) {
+        jdbcTemplate.update("DELETE FROM like_reviews WHERE review_id = ? AND user_id = ? " +
+                "AND is_like = ?", id, userId, false);
+    }
+
+    @Override
+    public Boolean getLikeReview(Integer id, Integer userId) {
+        return jdbcTemplate.queryForObject("SELECT is_like FROM like_reviews WHERE " +
+                "review_id = ? AND user_id = ?;", Boolean.class, id, userId);
+    }
 }

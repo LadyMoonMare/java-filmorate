@@ -45,6 +45,7 @@ public class FilmDbStorage implements FilmStorage {
             PreparedStatement ps = connection.prepareStatement("INSERT INTO films (title," +
                             "description, releaseDate, duration, mpa_id) VALUES (?,?,?,?,?);",
                     Statement.RETURN_GENERATED_KEYS);
+
             ps.setObject(1, film.getName());
             ps.setObject(2, film.getDescription());
             ps.setObject(3, film.getReleaseDate());
@@ -78,7 +79,7 @@ public class FilmDbStorage implements FilmStorage {
                     " JOIN mpa AS m ON f.mpa_id = m.mpa_id WHERE id =" +
                     " ?;", filmRowMapper, id));
         } catch (EmptyResultDataAccessException e) {
-            log.warn("Film with id {} not found", id);
+            log.warn("Exception is thrown - empty result. Film with id {} not found", id);
             throw new DataNotFoundException("Film with id {} not found");
         }
     }
