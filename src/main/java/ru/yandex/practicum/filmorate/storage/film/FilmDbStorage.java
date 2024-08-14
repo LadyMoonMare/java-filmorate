@@ -196,12 +196,6 @@ public class FilmDbStorage implements FilmStorage {
             //genreString = String.format("genre_id = %s", genreId);
             return jdbcTemplate.query(genreStringSql, filmRowMapper, "%" + genreId + "%", "%" + count + "%");
         }
-
-        if (Objects.nonNull(year)) {
-            //yearString = String.format("YEAR(release_date) = %s", year);
-        }
-
-
-
+        return null;
     }
 }
