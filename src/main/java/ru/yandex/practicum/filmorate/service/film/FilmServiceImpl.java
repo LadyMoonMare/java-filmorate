@@ -7,7 +7,11 @@ import ru.yandex.practicum.filmorate.exception.DataNotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.event.Event;
+import ru.yandex.practicum.filmorate.model.event.EventType;
+import ru.yandex.practicum.filmorate.model.event.Operation;
 import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
+import ru.yandex.practicum.filmorate.storage.event.EventStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.like.LikeStorage;
@@ -31,6 +35,7 @@ public class FilmServiceImpl implements FilmService {
     private final GenreStorage gs;
     private final DirectorStorage directorStorage;
     private final UserStorage userStorage;
+    private final EventStorage es;
     // private final FriendsStorage friendsStorages;
     private final Comparator<Genre> comparator = new Comparator<Genre>() {
         @Override
@@ -104,14 +109,39 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public void addLike(Integer id, Integer userId) {
+        userStorage.findUserById(userId).orElseThrow( () -> {
+            log.warn("User with id {} not found",userId);
+            return new DataNotFoundException("user not found");
+        });
+
         ls.addLike(id, userId);
         log.info("user {} successfully liked film {}", userId, id);
+
+        log.info("attempt to add like-event to feed");
+        Event event = new Event();
+        event.setUserId(userId);
+        event.setEventType(EventType.LIKE);
+        event.setOperation(Operation.ADD);
+        event.setEntityId(id);
+        es.addEvent(event);
     }
 
     @Override
     public void removeLike(Integer id, Integer userId) {
+        userStorage.findUserById(userId).orElseThrow( () -> {
+            log.warn("User with id {} not found",userId);
+            return new DataNotFoundException("user not found");
+        });
+
         ls.removeLike(id, userId);
         log.info("user {} successfully removed like from film {}", userId, id);
+
+        Event event = new Event();
+        event.setUserId(userId);
+        event.setEventType(EventType.LIKE);
+        event.setOperation(Operation.REMOVE);
+        event.setEntityId(id);
+        es.addEvent(event);
     }
 
     @Override
