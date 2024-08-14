@@ -27,7 +27,13 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> getAllFilms() {
         return jdbcTemplate.query("SELECT * FROM films AS f " +
-                                  " JOIN mpa AS m ON f.mpa_id = m.mpa_id", filmRowMapper);
+                " JOIN mpa AS m ON f.mpa_id = m.mpa_id", filmRowMapper);
+    }
+
+    @Override
+    public void deleteFilmById(Integer id) {
+        final String sql = "DELETE FROM films WHERE id = ?";
+        jdbcTemplate.update(sql, id);
     }
 
     @Override
@@ -37,8 +43,9 @@ public class FilmDbStorage implements FilmStorage {
         log.info("addFilm attempt for database {}", film);
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement("INSERT INTO films (title," +
-                                                               "description, releaseDate, duration," +
-                            " mpa_id) VALUES (?,?,?,?,?);", Statement.RETURN_GENERATED_KEYS);
+                            "description, releaseDate, duration, mpa_id) VALUES (?,?,?,?,?);",
+                    Statement.RETURN_GENERATED_KEYS);
+
             ps.setObject(1, film.getName());
             ps.setObject(2, film.getDescription());
             ps.setObject(3, film.getReleaseDate());
@@ -55,7 +62,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film updateFilm(Film film) {
         jdbcTemplate.update("UPDATE films SET title = ?, description = ?, releaseDate = ?," +
-                            "duration = ?, mpa_id = ? WHERE id = ?;",
+                        "duration = ?, mpa_id = ? WHERE id = ?;",
                 film.getName(),
                 film.getDescription(),
                 film.getReleaseDate(),

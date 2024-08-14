@@ -43,6 +43,10 @@ public class InMemoryFilmStorage implements FilmStorage {
         return film;
     }
 
+    public void deleteFilmById(Integer id) {
+        log.info("delete film by id");
+    }
+
     @Override
     public Film updateFilm(Film film) {
         if (!films.containsKey(film.getId())) {

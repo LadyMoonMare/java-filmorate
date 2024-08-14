@@ -8,6 +8,8 @@ import java.util.Optional;
 public interface FilmStorage {
     List<Film> getAllFilms();
 
+    void deleteFilmById(Integer id);
+
     Film addFilm(Film film);
 
     Film updateFilm(Film film);
