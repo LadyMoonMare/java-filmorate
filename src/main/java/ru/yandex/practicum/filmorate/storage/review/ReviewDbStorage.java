@@ -1,0 +1,92 @@
+package ru.yandex.practicum.filmorate.storage.review;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.JdbcOperations;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.storage.mappers.ReviewRowMapper;
+
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+import java.util.List;
+
+@Component
+@Slf4j
+@RequiredArgsConstructor
+public class ReviewDbStorage implements ReviewStorage {
+    private final JdbcOperations jo;
+    private final ReviewRowMapper mapper;
+
+    @Override
+    public Review addReview(Review review) {
+        GeneratedKeyHolder kh = new GeneratedKeyHolder();
+        log.info("attempt to add review to database");
+
+        jo.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement("INSERT INTO reviews(content, " +
+                    "is_positive, film_id, user_id, useful) " +
+                    "VALUES(?,?,?,?,?);", Statement.RETURN_GENERATED_KEYS);
+            ps.setObject(1, review.getContent());
+            ps.setObject(2, review.getIsPositive());
+            ps.setObject(3, review.getFilmId());
+            ps.setObject(4, review.getUserId());
+            ps.setObject(5, review.getUseful());
+            return ps;
+        }, kh);
+
+        review.setReviewId(kh.getKeyAs(Integer.class));
+
+        log.info("review successfully added to database");
+        return review;
+    }
+
+    @Override
+    public Review updateReview(Review review) {
+        log.info("attempt to update review with id = {} in database", review.getReviewId());
+        jo.update("UPDATE reviews SET content = ?,film_id = ?, is_positive = ?," +
+                        "user_id = ?, useful = ? WHERE id = ?;",
+                review.getContent(),
+                review.getFilmId(),
+                review.getIsPositive(),
+                review.getUserId(),
+                review.getUseful(),
+                review.getReviewId());
+        log.info("update review success");
+        return review;
+    }
+
+    @Override
+    public void deleteReview(Integer id) {
+        log.info("attempt to delete review with id = {} from database", id);
+        jo.update("DELETE FROM reviews WHERE id = ?;", id);
+    }
+
+    @Override
+    public Review findReview(Integer id) {
+        log.info("attempt to find review with id= {}", id);
+            return jo.queryForObject("SELECT * FROM reviews WHERE id = ?;", mapper, id);
+    }
+
+    @Override
+    public List<Review> getAllReviews(Integer count) {
+        log.info("attempt to get all reviews from database, count = {}", count);
+        return jo.query("SELECT * FROM reviews ORDER BY useful DESC LIMIT(?);", mapper, count);
+    }
+
+    @Override
+    public List<Review> getAllReviewsByFilmId(Integer filmId, Integer count) {
+        log.info("attempt to get reviews for film with id = {}", filmId);
+        return jo.query("SELECT * FROM reviews WHERE film_id = ?" +
+                " ORDER BY useful DESC LIMIT(?);", mapper, filmId, count);
+    }
+
+    @Override
+    public Integer findReviewIdByParams(Integer filmId, Integer userId) {
+        log.info("attempt to get review id by params filmId = {}, userId = {}", filmId, userId);
+        return jo.queryForObject("SELECT id FROM reviews WHERE film_id = ?" +
+                " AND user_id = ?", Integer.class, filmId, userId);
+    }
+
+}
