@@ -171,7 +171,7 @@ public class FilmDbStorage implements FilmStorage {
         }
 
         String baseSql = """
-                SELECT films.id, films.title, films.description, films.releaseDate, films.duration, films.mpa_id, mpa.rating, genres.id, genres.name, directors.name
+                SELECT films.id, films.title, films.description, films.releaseDate, films.duration, films.mpa_id, mpa.rating, genres.id, genres.name, directors.id, directors.name, count(likes.user_id)
                 FROM films
                 JOIN mpa ON films.mpa_id = mpa.mpa_id
                 LEFT JOIN film_genre ON films.id = film_genre.film_id
