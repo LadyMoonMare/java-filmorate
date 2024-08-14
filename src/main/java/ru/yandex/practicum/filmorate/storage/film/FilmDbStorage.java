@@ -72,8 +72,7 @@ public class FilmDbStorage implements FilmStorage {
                     " JOIN mpa AS m ON f.mpa_id = m.mpa_id WHERE id =" +
                     " ?;", filmRowMapper, id));
         } catch (EmptyResultDataAccessException e) {
-            log.warn("Exception is thrown - empty result");
-            log.warn("Film with id {} not found", id);
+            log.warn("Exception is thrown - empty result. Film with id {} not found", id);
             throw new DataNotFoundException("Film with id {} not found");
         }
     }

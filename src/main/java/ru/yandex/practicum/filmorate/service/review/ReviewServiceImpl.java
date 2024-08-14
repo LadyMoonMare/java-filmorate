@@ -2,7 +2,10 @@ package ru.yandex.practicum.filmorate.service.review;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.DataNotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.like.LikeStorage;
@@ -45,7 +48,12 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public Review getReview(Integer id) {
+        try {
         return rs.findReview(id);
+        } catch (EmptyResultDataAccessException e) {
+            log.warn("Exception is thrown - empty result. Review with id {} not found", id);
+            throw new DataNotFoundException("Review with id {} not found");
+        }
     }
 
     @Override
@@ -64,11 +72,25 @@ public class ReviewServiceImpl implements ReviewService {
         Review review = getReview(id);
         us.findUserById(userId);
 
-        review.setUseful(review.getUseful() + 1);
-        log.info("attempt to add like to review with id = {} by user with id = {}",
-                id, userId);
-        ls.addLikeToReview(id, userId);
-        rs.updateReview(review);
+        try {
+            Boolean isLike = ls.getLikeReview(id, userId);
+
+            if (!isLike) {
+                review = deleteDislike(id, userId);
+                review.setUseful(review.getUseful() + 1);
+                log.info("dislike is discarded, adding like");
+                ls.addLikeReview(id, userId);
+                rs.updateReview(review);
+            } else {
+                throw new ValidationException("Your like is already set");
+            }
+        } catch (EmptyResultDataAccessException e) {
+            review.setUseful(review.getUseful() + 1);
+            log.info("attempt to add like to review with id = {} by user with id = {}",
+                    id, userId);
+            ls.addLikeReview(id, userId);
+            rs.updateReview(review);
+        }
     }
 
     @Override
@@ -76,37 +98,70 @@ public class ReviewServiceImpl implements ReviewService {
         Review review = getReview(id);
         us.findUserById(userId);
 
-        if (review.getUseful() == 1) { //заглушка для теста постман, предполагается, что диз не может приравнять к нулю
-            review.setUseful(0);
+        try {
+            Boolean isLike = ls.getLikeReview(id, userId);
+
+            if (isLike) {
+                review = deleteLike(id, userId);
+                review.setUseful(review.getUseful() - 1);
+                log.info("like is discarded, adding dislike");
+                ls.addDislikeReview(id, userId);
+                rs.updateReview(review);
+            } else {
+                throw new ValidationException("Your dislike is already set");
+            }
+        } catch (EmptyResultDataAccessException e) {
+            review.setUseful(review.getUseful() - 1);
+            log.info("attempt to add dislike to review with id = {} by user with id = {}",
+                    id, userId);
+            ls.addDislikeReview(id, userId);
+            rs.updateReview(review);
         }
-        review.setUseful(review.getUseful() - 1);
-        log.info("attempt to add dislike to review with id = {} by user with id = {}",
-                id, userId);
-        ls.addDislikeToReview(id, userId);
-        rs.updateReview(review);
     }
 
     @Override
-    public void deleteLike(Integer id, Integer userId) {
+    public Review deleteLike(Integer id, Integer userId) {
         Review review = getReview(id);
         us.findUserById(userId);
 
-        review.setUseful(review.getUseful() - 1);
-        log.info("attempt to remove like from review with id = {} by user with id = {}",
-                id, userId);
-        ls.deleteLikeFromReview(id, userId);
-        rs.updateReview(review);
+        try {
+            Boolean isLike = ls.getLikeReview(id, userId);
+
+            if (isLike) {
+                review.setUseful(review.getUseful() - 1);
+                log.info("attempt to remove like from review with id = {} by user with id = {}",
+                        id, userId);
+                ls.deleteLikeReview(id, userId);
+                rs.updateReview(review);
+                return review;
+            } else {
+                throw new DataNotFoundException("there is no like on review id" + id);
+            }
+        } catch (EmptyResultDataAccessException e) {
+            throw new DataNotFoundException("there is no like on review id" + id);
+        }
     }
 
     @Override
-    public void deleteDislike(Integer id, Integer userId) {
+    public Review deleteDislike(Integer id, Integer userId) {
         Review review = getReview(id);
         us.findUserById(userId);
 
-        review.setUseful(review.getUseful() + 1);
-        log.info("attempt to remove dislike from review with id = {} by user with id = {}",
-                id, userId);
-        ls.deleteDislikeFromReview(id, userId);
-        rs.updateReview(review);
+        try {
+            Boolean isLike = ls.getLikeReview(id, userId);
+
+            if (!isLike) {
+                review.setUseful(review.getUseful() + 1);
+                log.info("attempt to remove dislike from review with id = {} by user with id = {}",
+                        id, userId);
+                ls.deleteDislikeReview(id, userId);
+                rs.updateReview(review);
+                return review;
+            } else {
+                throw  new DataNotFoundException("there is no dislike on review id" + id);
+            }
+        } catch (EmptyResultDataAccessException e) {
+            throw  new DataNotFoundException("there is no dislike on review id" + id);
+        }
     }
 }

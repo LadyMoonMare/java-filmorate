@@ -21,8 +21,8 @@ public interface ReviewService {
 
     void addDislike(Integer id, Integer userId);
 
-    void deleteLike(Integer id, Integer userId);
+    Review deleteLike(Integer id, Integer userId);
 
-    void deleteDislike(Integer id, Integer userId);
+    Review deleteDislike(Integer id, Integer userId);
 
 }

@@ -11,7 +11,6 @@ import lombok.Data;
 @AllArgsConstructor
 public class Review {
     private int reviewId;
-    @NotNull
     @NotBlank
     private String content;
     @NotNull
