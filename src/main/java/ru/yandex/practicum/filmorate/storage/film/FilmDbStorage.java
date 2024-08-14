@@ -182,6 +182,7 @@ public class FilmDbStorage implements FilmStorage {
                 WHERE genres.id = ?
                 GROUP BY films.id
                 ORDER BY count(likes.user_id)
+                desc limit = ?
                 """;
         return jdbcTemplate.query(baseSql, filmRowMapper, "%" + genreId + "%", "%" + count + "%");
 
