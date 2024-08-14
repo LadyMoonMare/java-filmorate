@@ -5,10 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcOperations;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.DataNotFoundException;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 
 import java.sql.PreparedStatement;
@@ -22,6 +25,7 @@ import java.util.*;
 public class FilmDbStorage implements FilmStorage {
     private final JdbcOperations jdbcTemplate;
     private final FilmRowMapper filmRowMapper;
+    private final NamedParameterJdbcOperations jdbc;
 
     @Override
     public List<Film> getAllFilms() {
@@ -196,7 +200,109 @@ public class FilmDbStorage implements FilmStorage {
 //        } else if (Objects.nonNull(genreId)) {
 //            return jdbcTemplate.query(genreStringSql, filmRowMapper, "%" + genreId + "%", "%" + count + "%");
 //        }
-        return new ArrayList<>();
+//        return new ArrayList<>();
 
+        Map<String, Object> param = new HashMap<>();
+
+        String concatJoin;
+        String concatWhere;
+        String concatLimit;
+        if (year != null && genreId != null) {
+            concatJoin = "JOIN film_genre ON films.id = film_genre.film_id \n";
+            concatWhere = "WHERE YEAR(films.releaseDate) = :year AND film_genre.genre_id = :genreId \n";
+            param.put("year", year);
+            param.put("genreId", genreId);
+        } else if (year == null && genreId != null) {
+            concatJoin = "JOIN film_genre ON films.id = film_genre.film_id \n";
+            concatWhere = "WHERE film_genre.genre_id = :genreId \n";
+            param.put("genreId", genreId);
+        } else if (year != null) {
+            concatJoin = " \n";
+            concatWhere = "WHERE YEAR(films.releaseDate) = :year \n";
+            param.put("year", year);
+        } else {
+            concatJoin = " \n";
+            concatWhere = " \n";
+        }
+        if (count != null) {
+            concatLimit = """
+                    LIMIT :count ;
+                    """;
+            param.put("count", count);
+        } else {
+            concatLimit = """
+                    ";"
+                    """;
+        }
+        String baseSql = """
+                SELECT
+                    films.id,
+                    films.title,
+                    description,
+                    releaseDate,
+                    duration,
+                    films.mpa_id,
+                    mpa.rating AS RATING_NAME
+                FROM FILMS
+                         LEFT JOIN likes ON films.id = likes.film_id
+                         JOIN mpa ON films.mpa_id = mpa.mpa_id
+                """;
+
+        String bodySql = """
+                GROUP BY films.id
+                ORDER BY count(likes.film_id) DESC
+                """;
+
+        String finalSql = baseSql + concatJoin + concatWhere + bodySql + concatLimit;
+
+        return getFilms(finalSql, param);
+
+    }
+
+    private List<Film> getFilms(String sql, Map<String, Object> param) {
+        List<Film> films = jdbc.query(sql, param, new FilmRowMapper());
+        if (films != null) {
+            fillingFilmsWithGenres(films);
+            fillingFilmsWithDirectors(films);
+        }
+        return films;
+    }
+
+    private void fillingFilmsWithGenres(List<Film> films) {
+        String sql = """
+                SELECT film_id,
+                       film_genre.genre_id AS GENRE_ID,
+                       name
+                FROM film_genre
+                    LEFT JOIN genres ON genres.id = film_genre.genre_id
+                WHERE film_id IN (:films_id);
+                """;
+        Map<String, Object> param = Map.of("films_id", films.stream().map(Film::getId).toList());
+        Map<Integer, List<Genre>> genres = (Map<Integer, List<Genre>>) jdbc.query(sql, param, new FilmRowMapper());
+
+        films.forEach(film -> {
+            if (genres != null && genres.containsKey(film.getId())) {
+                film.getGenres().addAll(genres.get(film.getId()));
+            }
+        });
+    }
+
+    private void fillingFilmsWithDirectors(List<Film> films) {
+        String sql = """
+                SELECT film_id,
+                       directors.id AS DIRECTOR_ID,
+                       name
+                FROM film_director
+                LEFT JOIN directors ON film_director.irector_id = directors.id
+                WHERE FILM_ID IN (:films_id);
+                """;
+        Map<String, Object> param = Map.of("films_id", films.stream().map(Film::getId).toList());
+        Map<Integer, List<Director>> directors = (Map<Integer, List<Director>>) jdbc.query(sql, param, new FilmRowMapper());
+
+        films.forEach(film -> {
+            if (directors != null && directors.containsKey(film.getId())) {
+                film.getDirectors().addAll(directors.get(film.getId()));
+            }
+        });
     }
 }
