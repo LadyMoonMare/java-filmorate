@@ -9,6 +9,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.DataNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.film.FilmService;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 
 import java.sql.PreparedStatement;
@@ -22,6 +23,7 @@ import java.util.*;
 public class FilmDbStorage implements FilmStorage {
     private final JdbcOperations jdbcTemplate;
     private final FilmRowMapper filmRowMapper;
+    private final FilmService filmService;
 
     @Override
     public List<Film> getAllFilms() {
@@ -196,6 +198,10 @@ public class FilmDbStorage implements FilmStorage {
 //            //genreString = String.format("genre_id = %s", genreId);
 //            return jdbcTemplate.query(genreStringSql, filmRowMapper, "%" + genreId + "%", "%" + count + "%");
 //        }
-        return null;
+        return jdbcTemplate.query("SELECT * FROM films AS f " +
+                                  " JOIN mpa AS m ON f.mpa_id = m.mpa_id" +
+                                  " JOIN film_genre AS fg ON f.id = fg.film_id" +
+                                  " JOIN genres AS g ON g.id = fg.genre_id" +
+                                  " WHERE g.id = ?", filmRowMapper, genreId);
     }
 }

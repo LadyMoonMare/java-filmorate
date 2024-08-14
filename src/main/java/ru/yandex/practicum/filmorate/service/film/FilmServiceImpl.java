@@ -182,6 +182,18 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public List<Film> getPopular(Integer count, Integer genreId, Integer year) {
-        return getPopularFilms(count);
+        List<Film> popularFilms = filmStorage.getTopPopularWithFilter(count, genreId, year).stream()
+                .sorted(new Comparator<Film>() {
+                    @Override
+                    public int compare(Film o1, Film o2) {
+                        return ls.getLikesFromDb(o2.getId()).size() -
+                               ls.getLikesFromDb(o1.getId()).size();
+                    }
+                })
+                .limit(count)
+                .toList();
+        gs.loadGenres(popularFilms);
+        return popularFilms;
+    }
     }
 }
