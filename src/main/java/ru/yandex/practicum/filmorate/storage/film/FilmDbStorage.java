@@ -198,10 +198,13 @@ public class FilmDbStorage implements FilmStorage {
 //            //genreString = String.format("genre_id = %s", genreId);
 //            return jdbcTemplate.query(genreStringSql, filmRowMapper, "%" + genreId + "%", "%" + count + "%");
 //        }
-        return jdbcTemplate.query("SELECT * FROM films AS f " +
+        return jdbcTemplate.query("SELECT f.id, f.title, f.description, f.releaseDate, f.duration, f.mpa_id, mpa.rating, COUNT(l.user_id) AS likes FROM films AS f " +
                                   " JOIN mpa AS m ON f.mpa_id = m.mpa_id" +
                                   " LEFT JOIN film_genre AS fg ON f.id = fg.film_id" +
                                   " LEFT JOIN genres AS g ON g.id = fg.genre_id" +
-                                  " WHERE g.id = ?", filmRowMapper, genreId);
+                                  " LEFT JOIN likes l ON f.id = l.film_id" +
+                                  " WHERE g.id = ?" +
+                                  " GROUP BY f.id, f.title, f.description, f.releaseDate, f.duration, f.mpa_id, mpa.rating" +
+                                  " ORDER BY likes DESC LIMIT ?", filmRowMapper, genreId, count);
     }
 }
