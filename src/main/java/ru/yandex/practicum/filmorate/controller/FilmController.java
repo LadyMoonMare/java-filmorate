@@ -128,7 +128,7 @@ public class FilmController {
 
     @Validated
     @GetMapping("/popular?count={limit}&genreId={genreId}&year={year}")
-    public List<Film> getPopularFilms(@RequestParam(required = false) @Min(0) Integer count,
+    public List<Film> getPopularFilms(@RequestParam(required = false, defaultValue = "10") @Min(0) Integer count,
                                             @RequestParam(required = false) Integer genreId,
                                             @RequestParam(required = false) @Min(1895) Integer year) {
         log.info("Запрос на получение популярных фильмов");
