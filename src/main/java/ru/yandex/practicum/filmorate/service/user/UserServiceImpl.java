@@ -7,6 +7,9 @@ import ru.yandex.practicum.filmorate.exception.DataNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.model.event.Event;
+import ru.yandex.practicum.filmorate.model.event.EventType;
+import ru.yandex.practicum.filmorate.model.event.Operation;
+import ru.yandex.practicum.filmorate.storage.event.EventStorage;
 import ru.yandex.practicum.filmorate.storage.friends.FriendsStorage;
 import ru.yandex.practicum.filmorate.storage.like.LikeStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
@@ -21,6 +24,7 @@ public class UserServiceImpl implements UserService {
     private final UserStorage userStorage;
     private final FriendsStorage fs;
     private final LikeStorage likeStorage;
+    private final EventStorage es;
 
     @Override
     public List<User> getAllUsers() {
@@ -68,6 +72,9 @@ public class UserServiceImpl implements UserService {
         User friend = getUserById(friendId);
         fs.addFriend(user.getId(), friend.getId());
         log.info("user {} successfully added to friend list", friendId);
+
+        log.info("attempt to add add-friend event to feed");
+        addEvent(id, friendId, Operation.ADD);
     }
 
     @Override
@@ -76,6 +83,9 @@ public class UserServiceImpl implements UserService {
         User friend = getUserById(friendId);
         fs.deleteFriend(user.getId(), friend.getId());
         log.info("user {} successfully deleted from friend list", friendId);
+
+        log.info("attempt to add remove-friend event to feed");
+        addEvent(id, friendId, Operation.REMOVE);
     }
 
     @Override
@@ -120,6 +130,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<Event> getFeed(Integer userId) {
         getUserById(userId);
-        return null;
+        return es.getFeed(userId);
+    }
+
+    public void addEvent(Integer id, Integer friendId, Operation operation) {
+        Event event = new Event();
+        event.setUserId(id);
+        event.setEntityId(friendId);
+        event.setEventType(EventType.FRIEND);
+        event.setOperation(operation);
+        es.addEvent(event);
     }
 }
