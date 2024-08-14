@@ -176,13 +176,13 @@ public class FilmDbStorage implements FilmStorage {
                 JOIN mpa ON films.mpa_id = mpa.mpa_id
                 LEFT JOIN film_genre ON films.id = film_genre.film_id
                 LEFT JOIN genres ON film_genre.genre_id = genres.id
-                LEFT JOIN film_director fd ON f.id = fd.film_id
-                LEFT JOIN directors d ON fd.director_id = d.id
+                LEFT JOIN film_director fd ON films.id = film_director.film_id
+                LEFT JOIN directors ON film_director.director_id = directors.id
                 LEFT JOIN likes ON films.id = likes.film_id
                 WHERE genres.id = ?
                 GROUP BY films.id
                 ORDER BY count(likes.user_id)
-                desc limit = ?
+                DESC limit ?
                 """;
         return jdbcTemplate.query(baseSql, filmRowMapper, "%" + genreId + "%", "%" + count + "%");
 
