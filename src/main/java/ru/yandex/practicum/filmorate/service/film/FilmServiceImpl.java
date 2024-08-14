@@ -118,12 +118,7 @@ public class FilmServiceImpl implements FilmService {
         log.info("user {} successfully liked film {}", userId, id);
 
         log.info("attempt to add like-event to feed");
-        Event event = new Event();
-        event.setUserId(userId);
-        event.setEventType(EventType.LIKE);
-        event.setOperation(Operation.ADD);
-        event.setEntityId(id);
-        es.addEvent(event);
+        addEvent(id, userId, Operation.ADD);
     }
 
     @Override
@@ -136,12 +131,8 @@ public class FilmServiceImpl implements FilmService {
         ls.removeLike(id, userId);
         log.info("user {} successfully removed like from film {}", userId, id);
 
-        Event event = new Event();
-        event.setUserId(userId);
-        event.setEventType(EventType.LIKE);
-        event.setOperation(Operation.REMOVE);
-        event.setEntityId(id);
-        es.addEvent(event);
+        log.info("attempt to add remove-like-film event");
+        addEvent(id, userId, Operation.REMOVE);
     }
 
     @Override
@@ -208,5 +199,15 @@ public class FilmServiceImpl implements FilmService {
         log.info("Получили фильмы из БД {}", searchedFilms);
         searchedFilms = gs.loadGenres(searchedFilms);
         return directorStorage.loadDirectors(searchedFilms);
+    }
+
+    public void addEvent(Integer filmId,Integer userId, Operation operation) {
+        Event event = new Event();
+
+        event.setUserId(userId);
+        event.setEventType(EventType.LIKE);
+        event.setOperation(operation);
+        event.setEntityId(filmId);
+        es.addEvent(event);
     }
 }
