@@ -191,6 +191,7 @@ public class FilmDbStorage implements FilmStorage {
                 DESC LIMIT ?
                 """;
 
+
         if (Objects.nonNull(genreId) || Objects.nonNull(genreId)) {
             return jdbcTemplate.query(genreAndYearStringSql, filmRowMapper, "%" + genreId + "%", "%" + year + "%", "%" + count + "%");
         } else if (Objects.nonNull(genreId)) {
