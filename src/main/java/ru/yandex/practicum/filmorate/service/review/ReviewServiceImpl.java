@@ -7,6 +7,10 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.DataNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.model.event.Event;
+import ru.yandex.practicum.filmorate.model.event.EventType;
+import ru.yandex.practicum.filmorate.model.event.Operation;
+import ru.yandex.practicum.filmorate.storage.event.EventStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.like.LikeStorage;
 import ru.yandex.practicum.filmorate.storage.review.ReviewStorage;
@@ -22,13 +26,19 @@ public class ReviewServiceImpl implements ReviewService {
     private final FilmStorage fs;
     private final UserStorage us;
     private final LikeStorage ls;
+    private final EventStorage es;
 
     @Override
     public Review addReview(Review review) {
         fs.findFilmById(review.getFilmId());
         us.findUserById(review.getUserId());
 
-        return rs.addReview(review);
+        rs.addReview(review);
+
+        Integer reviewId = rs.findReviewIdByParams(review.getFilmId(), review.getUserId());
+        review = getReview(reviewId);
+        addEvent(review, Operation.ADD);
+        return review;
     }
 
     @Override
@@ -37,13 +47,16 @@ public class ReviewServiceImpl implements ReviewService {
         us.findUserById(review.getUserId());
 
         review.setReviewId(rs.findReviewIdByParams(review.getFilmId(), review.getUserId()));
-        return rs.updateReview(review);
+        review = rs.updateReview(review);
+        addEvent(review, Operation.UPDATE);
+        return review;
     }
 
     @Override
     public void deleteReview(Integer id) {
-        getReview(id);
+        Review review = getReview(id);
         rs.deleteReview(id);
+        addEvent(review, Operation.REMOVE);
     }
 
     @Override
@@ -163,5 +176,14 @@ public class ReviewServiceImpl implements ReviewService {
         } catch (EmptyResultDataAccessException e) {
             throw  new DataNotFoundException("there is no dislike on review id" + id);
         }
+    }
+
+    public void addEvent(Review review, Operation operation) {
+        Event event = new Event();
+        event.setEventType(EventType.REVIEW);
+        event.setOperation(operation);
+        event.setUserId(review.getUserId());
+        event.setEntityId(review.getReviewId());
+        es.addEvent(event);
     }
 }
