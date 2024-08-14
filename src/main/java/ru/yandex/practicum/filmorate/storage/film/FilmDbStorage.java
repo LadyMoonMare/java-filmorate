@@ -200,8 +200,8 @@ public class FilmDbStorage implements FilmStorage {
 //        }
         return jdbcTemplate.query("SELECT * FROM films AS f " +
                                   " JOIN mpa AS m ON f.mpa_id = m.mpa_id" +
-                                  " JOIN film_genre AS fg ON f.id = fg.film_id" +
-                                  " JOIN genres AS g ON g.id = fg.genre_id" +
+                                  " LEFT JOIN film_genre AS fg ON f.id = fg.film_id" +
+                                  " LEFT JOIN genres AS g ON g.id = fg.genre_id" +
                                   " WHERE g.id = ?", filmRowMapper, genreId);
     }
 }
