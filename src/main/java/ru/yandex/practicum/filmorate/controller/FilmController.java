@@ -127,10 +127,13 @@ public class FilmController {
     }
 
     @Validated
-    @GetMapping("/popular?count={limit}&genreId={genreId}&year={year}")
-    public List<Film> getPopularFilms(@RequestParam(required = false) @Min(0) Integer count,
-                                            @RequestParam(required = false) Integer genreId,
-                                            @RequestParam(required = false) @Min(1895) Integer year) {
+    @GetMapping("/popular")
+    public Collection<Film> getPopularFilms(
+            @RequestParam(name = "count",
+                    defaultValue = "10", required = false) Integer count,
+            @RequestParam(name = "genreId", required = false) Integer genreId,
+            @RequestParam(name = "year", required = false) Integer year
+    ) {
         log.info("Запрос на получение популярных фильмов");
         List<Film> films = filmService.getPopular(count, genreId, year);
         log.info("Отправлено {} фильмов", count);
