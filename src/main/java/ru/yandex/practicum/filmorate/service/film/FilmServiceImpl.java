@@ -195,5 +195,4 @@ public class FilmServiceImpl implements FilmService {
         gs.loadGenres(popularFilms);
         return popularFilms;
     }
-    }
 }
