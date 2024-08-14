@@ -161,50 +161,42 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public List<Film> getTopPopularWithFilter(Integer count, Integer year, Integer genreId) {
-//
-//        final String genreAndYearStringSql = """
-//                SELECT films.id, films.title, films.description, films.releaseDate, films.duration, films.mpa_id, mpa.rating, genres.id, genres.name, directors.id, directors.name, count(likes.user_id)
-//                FROM films
-//                JOIN mpa ON films.mpa_id = mpa.mpa_id
-//                LEFT JOIN film_genre ON films.id = film_genre.film_id
-//                LEFT JOIN genres ON film_genre.genre_id = genres.id
-//                LEFT JOIN film_director fd ON films.id = film_director.film_id
-//                LEFT JOIN directors ON film_director.director_id = directors.id
-//                LEFT JOIN likes ON films.id = likes.film_id
-//                WHERE genres.id = ? AND YEAR(releaseDate) = ?
-//                GROUP BY films.id
-//                ORDER BY count(likes.user_id)
-//                DESC limit ?
-//                """;
-//        final String genreStringSql = """
-//                SELECT films.id, films.title, films.description, films.releaseDate, films.duration, films.mpa_id, mpa.rating, genres.id, genres.name, directors.id, directors.name, count(likes.user_id)
-//                FROM films
-//                JOIN mpa ON films.mpa_id = mpa.mpa_id
-//                LEFT JOIN film_genre ON films.id = film_genre.film_id
-//                LEFT JOIN genres ON film_genre.genre_id = genres.id
-//                LEFT JOIN film_director fd ON films.id = film_director.film_id
-//                LEFT JOIN directors ON film_director.director_id = directors.id
-//                LEFT JOIN likes ON films.id = likes.film_id
-//                WHERE genres.id = ?
-//                GROUP BY films.id
-//                ORDER BY count(likes.user_id)
-//                DESC limit ?
-//                """;
-//
-//        if (Objects.nonNull(genreId) || Objects.nonNull(genreId)) {
-//            //genreString = String.format("genre_id = %s", genreId);
-//            return jdbcTemplate.query(genreAndYearStringSql, filmRowMapper, "%" + genreId + "%", "%" + year + "%", "%" + count + "%");
-//        } else if (Objects.nonNull(genreId)) {
-//            //genreString = String.format("genre_id = %s", genreId);
-//            return jdbcTemplate.query(genreStringSql, filmRowMapper, "%" + genreId + "%", "%" + count + "%");
-//        }
-        return jdbcTemplate.query("SELECT f.id, f.title, f.description, f.releaseDate, f.duration, f.mpa_id, mpa.rating, COUNT(l.user_id) AS likes FROM films AS f " +
-                                  " JOIN mpa AS m ON f.mpa_id = m.mpa_id" +
-                                  " LEFT JOIN film_genre AS fg ON f.id = fg.film_id" +
-                                  " LEFT JOIN genres AS g ON g.id = fg.genre_id" +
-                                  " LEFT JOIN likes l ON f.id = l.film_id" +
-                                  " WHERE g.id = ?" +
-                                  " GROUP BY f.id, f.title, f.description, f.releaseDate, f.duration, f.mpa_id, mpa.rating" +
-                                  " ORDER BY likes DESC LIMIT ?", filmRowMapper, genreId, count);
+
+        final String genreAndYearStringSql = """
+                SELECT films.id, films.title, films.description, films.releaseDate, films.duration, films.mpa_id, mpa.rating, genres.id, genres.name, directors.id, directors.name, count(likes.user_id)
+                FROM films
+                JOIN mpa ON films.mpa_id = mpa.mpa_id
+                LEFT JOIN film_genre ON films.id = film_genre.film_id
+                LEFT JOIN genres ON film_genre.genre_id = genres.id
+                LEFT JOIN film_director fd ON films.id = film_director.film_id
+                LEFT JOIN directors ON film_director.director_id = directors.id
+                LEFT JOIN likes ON films.id = likes.film_id
+                WHERE genres.id = ? AND YEAR(releaseDate) = ?
+                GROUP BY films.id
+                ORDER BY count(likes.user_id)
+                DESC LIMIT ?
+                """;
+        final String genreStringSql = """
+                SELECT films.id, films.title, films.description, films.releaseDate, films.duration, films.mpa_id, mpa.rating, genres.id, genres.name, directors.id, directors.name, count(likes.user_id)
+                FROM films
+                JOIN mpa ON films.mpa_id = mpa.mpa_id
+                LEFT JOIN film_genre ON films.id = film_genre.film_id
+                LEFT JOIN genres ON film_genre.genre_id = genres.id
+                LEFT JOIN film_director fd ON films.id = film_director.film_id
+                LEFT JOIN directors ON film_director.director_id = directors.id
+                LEFT JOIN likes ON films.id = likes.film_id
+                WHERE genres.id = ?
+                GROUP BY films.id
+                ORDER BY count(likes.user_id)
+                DESC LIMIT ?
+                """;
+
+        if (Objects.nonNull(genreId) || Objects.nonNull(genreId)) {
+            return jdbcTemplate.query(genreAndYearStringSql, filmRowMapper, "%" + genreId + "%", "%" + year + "%", "%" + count + "%");
+        } else if (Objects.nonNull(genreId)) {
+            return jdbcTemplate.query(genreStringSql, filmRowMapper, "%" + genreId + "%", "%" + count + "%");
+        }
+        return new ArrayList<>();
+
     }
 }
