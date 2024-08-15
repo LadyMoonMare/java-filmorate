@@ -203,39 +203,14 @@ public class FilmDbStorage implements FilmStorage {
 
         String finalSql = baseSql + concatJoin + concatWhere + bodySql + concatLimit;
 
-        String years = """
-               SELECT
-               films.id, films.title, films.description, films.releaseDate, films.duration, films.mpa_id, mpa.rating, COUNT(likes.user_id)
-               FROM films
-               LEFT JOIN likes ON films.id = likes.film_id
-               JOIN mpa ON films.mpa_id = mpa.mpa_id
-               WHERE YEAR(films.releaseDate) = ?
-               GROUP BY films.id
-               ORDER BY COUNT(likes.user_id)
-               """;
-
-        String genres = """
-               SELECT
-               films.id, films.title, films.description, films.releaseDate, films.duration, films.mpa_id, mpa.rating, COUNT(likes.user_id)
-               FROM films
-               LEFT JOIN likes ON films.id = likes.film_id
-               JOIN mpa ON films.mpa_id = mpa.mpa_id
-               WHERE YEAR(films.releaseDate) = ?
-               GROUP BY films.id
-               JOIN film_genre ON films.id = film_genre.film_id
-               WHERE film_genre.genre_id = ?
-               GROUP BY films.id
-               ORDER BY COUNT(likes.user_id)
-               """;
-
         if (year != null && genreId != null) {
-            return genreDbStorage.loadGenres(jdbcTemplate.query(finalSql, filmRowMapper, year, genreId, count));
+            return jdbcTemplate.query(finalSql, filmRowMapper, year, genreId, count);
         } else if (year == null && genreId != null) {
-            return genreDbStorage.loadGenres(jdbcTemplate.query(finalSql, filmRowMapper, genreId, count));
+            return jdbcTemplate.query(finalSql, filmRowMapper, genreId, count);
         } else if (year != null) {
-            return genreDbStorage.loadGenres(jdbcTemplate.query(finalSql, filmRowMapper, year));
+            return jdbcTemplate.query(finalSql, filmRowMapper, year);
         } else {
-            return genreDbStorage.loadGenres(jdbcTemplate.query(finalSql, filmRowMapper, count));
+            return jdbcTemplate.query(finalSql, filmRowMapper, count);
         }
     }
 }

@@ -114,22 +114,6 @@ public class FilmServiceImpl implements FilmService {
         log.info("user {} successfully removed like from film {}", userId, id);
     }
 
-//    @Override
-//    public List<Film> getPopularFilms(Integer count) {
-//        List<Film> popularFilms = filmStorage.getAllFilms().stream()
-//                .sorted(new Comparator<Film>() {
-//                    @Override
-//                    public int compare(Film o1, Film o2) {
-//                        return ls.getLikesFromDb(o2.getId()).size() -
-//                                ls.getLikesFromDb(o1.getId()).size();
-//                    }
-//                })
-//                .limit(count)
-//                .toList();
-//        gs.loadGenres(popularFilms);
-//        return popularFilms;
-//    }
-
         @Override
     public List<Film> getPopularFilms(Integer count) {
             List<Film> films = filmStorage.getAllFilms().stream()
