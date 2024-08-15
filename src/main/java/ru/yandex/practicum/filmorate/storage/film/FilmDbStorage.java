@@ -9,9 +9,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.DataNotFoundException;
-import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 
@@ -26,8 +24,6 @@ import java.util.*;
 public class FilmDbStorage implements FilmStorage {
     private final JdbcOperations jdbcTemplate;
     private final FilmRowMapper filmRowMapper;
-    private final NamedParameterJdbcOperations jdbc;
-    private final GenreDbStorage genreDbStorage;
 
     @Override
     public List<Film> getAllFilms() {
