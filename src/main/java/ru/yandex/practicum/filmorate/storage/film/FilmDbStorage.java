@@ -160,61 +160,6 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
-//    @Override
-//    public List<Film> getTopPopularWithFilter(Integer count, Integer year, Integer genreId) {
-//
-//        String concatJoin;
-//        String concatWhere;
-//        String concatLimit = "";
-//
-//        if (year != null && genreId != null) {
-//            concatJoin = "JOIN film_genre ON films.id = film_genre.film_id \n";
-//            concatWhere = "WHERE YEAR(films.releaseDate) = ? AND film_genre.genre_id = ? \n";
-//        } else if (year == null && genreId != null) {
-//            concatJoin = "JOIN film_genre ON films.id = film_genre.film_id \n";
-//            concatWhere = "WHERE film_genre.genre_id = ? \n";
-//        } else if (year != null) {
-//            concatJoin = "";
-//            concatWhere = "WHERE YEAR(films.releaseDate) = ? \n";
-//        } else {
-//            concatJoin = " \n";
-//            concatWhere = " \n";
-//        }
-//        if (count != null) {
-//            concatLimit = """
-//                    LIMIT ?;
-//                    """;
-//        }
-////        } else {
-////            concatLimit = """
-////                    ";"
-////                    """;
-////        }
-//            String baseSql = """
-//                SELECT films.id, films.title, films.description, films.releaseDate, films.duration, films.mpa_id, mpa.rating, COUNT(likes.user_id)
-//                FROM films
-//                LEFT JOIN likes ON films.id = likes.film_id
-//                JOIN mpa ON films.mpa_id = mpa.mpa_id
-//                """;
-//
-//        String bodySql = """
-//                GROUP BY films.id
-//                ORDER BY COUNT(likes.user_id) DESC
-//                """;
-//
-//        String finalSql = baseSql + concatJoin + concatWhere + bodySql + concatLimit;
-//        log.info("Сформировали SQL-запрос: {}", finalSql);
-//        if (year != null && genreId != null) {
-//            return jdbcTemplate.query(finalSql, filmRowMapper, year, genreId, count);
-//        } else if (year == null && genreId != null) {
-//            return jdbcTemplate.query(finalSql, filmRowMapper, genreId, count);
-//        } else if (year != null) {
-//            return jdbcTemplate.query(finalSql, filmRowMapper, year);
-//        } else {
-//            return jdbcTemplate.query(finalSql, filmRowMapper, count);
-//        }
-//    }
-
     @Override
     public List<Film> getTopPopularWithFilter(Integer limit, Integer genreId, Integer year) {
         final StringBuilder sql = new StringBuilder(
