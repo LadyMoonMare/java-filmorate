@@ -166,6 +166,7 @@ public class FilmDbStorage implements FilmStorage {
         String concatJoin;
         String concatWhere;
         String concatLimit;
+
         if (year != null && genreId != null) {
             concatJoin = "JOIN film_genre ON films.id = film_genre.film_id \n";
             concatWhere = "WHERE YEAR(films.releaseDate) = ? AND film_genre.genre_id = ? \n";
