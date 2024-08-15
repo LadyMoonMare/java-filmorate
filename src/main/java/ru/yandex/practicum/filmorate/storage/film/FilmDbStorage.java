@@ -9,6 +9,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.DataNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 
 import java.sql.PreparedStatement;
@@ -22,6 +23,7 @@ import java.util.*;
 public class FilmDbStorage implements FilmStorage {
     private final JdbcOperations jdbcTemplate;
     private final FilmRowMapper filmRowMapper;
+    private final GenreDbStorage genreDbStorage;
 
     @Override
     public List<Film> getAllFilms() {
@@ -201,14 +203,39 @@ public class FilmDbStorage implements FilmStorage {
 
         String finalSql = baseSql + concatJoin + concatWhere + bodySql + concatLimit;
 
+        String years = """
+               SELECT
+               films.id, films.title, films.description, films.releaseDate, films.duration, films.mpa_id, mpa.rating, COUNT(likes.user_id)
+               FROM films
+               LEFT JOIN likes ON films.id = likes.film_id
+               JOIN mpa ON films.mpa_id = mpa.mpa_id
+               WHERE YEAR(films.releaseDate) = ?
+               GROUP BY films.id
+               ORDER BY COUNT(likes.user_id)
+               """;
+
+        String genres = """
+               SELECT
+               films.id, films.title, films.description, films.releaseDate, films.duration, films.mpa_id, mpa.rating, COUNT(likes.user_id)
+               FROM films
+               LEFT JOIN likes ON films.id = likes.film_id
+               JOIN mpa ON films.mpa_id = mpa.mpa_id
+               WHERE YEAR(films.releaseDate) = ?
+               GROUP BY films.id
+               JOIN film_genre ON films.id = film_genre.film_id
+               WHERE film_genre.genre_id = ?
+               GROUP BY films.id
+               ORDER BY COUNT(likes.user_id)
+               """;
+
         if (year != null && genreId != null) {
-            return jdbcTemplate.query(finalSql, filmRowMapper, year, genreId, count);
+            return genreDbStorage.loadGenres(jdbcTemplate.query(finalSql, filmRowMapper, year, genreId, count));
         } else if (year == null && genreId != null) {
-            return jdbcTemplate.query(finalSql, filmRowMapper, genreId, count);
+            return genreDbStorage.loadGenres(jdbcTemplate.query(finalSql, filmRowMapper, genreId, count));
         } else if (year != null) {
-            return jdbcTemplate.query(finalSql, filmRowMapper, year, count);
+            return genreDbStorage.loadGenres(jdbcTemplate.query(finalSql, filmRowMapper, year));
         } else {
-            return jdbcTemplate.query(finalSql, filmRowMapper, count);
+            return genreDbStorage.loadGenres(jdbcTemplate.query(finalSql, filmRowMapper, count));
         }
     }
 }
