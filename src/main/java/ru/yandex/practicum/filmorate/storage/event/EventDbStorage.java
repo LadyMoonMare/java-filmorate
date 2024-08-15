@@ -28,12 +28,12 @@ public class EventDbStorage implements EventStorage {
                 operationId);
     }
 
-    public Integer getEventTypeId (Event event) {
+    public Integer getEventTypeId(Event event) {
         return jo.queryForObject("SELECT id FROM event_type WHERE event_name = ?;", Integer.class,
                 event.getEventType().toString());
     }
 
-    public Integer getOperationId (Event event) {
+    public Integer getOperationId(Event event) {
         return jo.queryForObject("SELECT id FROM operation WHERE operation_name = ?;", Integer.class,
                 event.getOperation().toString());
     }

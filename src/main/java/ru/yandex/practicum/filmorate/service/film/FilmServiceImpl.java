@@ -109,7 +109,7 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public void addLike(Integer id, Integer userId) {
-        userStorage.findUserById(userId).orElseThrow( () -> {
+        userStorage.findUserById(userId).orElseThrow(() -> {
             log.warn("User with id {} not found",userId);
             return new DataNotFoundException("user not found");
         });
@@ -123,7 +123,7 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public void removeLike(Integer id, Integer userId) {
-        userStorage.findUserById(userId).orElseThrow( () -> {
+        userStorage.findUserById(userId).orElseThrow(() -> {
             log.warn("User with id {} not found",userId);
             return new DataNotFoundException("user not found");
         });
