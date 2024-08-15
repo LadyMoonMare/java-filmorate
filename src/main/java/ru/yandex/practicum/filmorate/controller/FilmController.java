@@ -130,7 +130,9 @@ public class FilmController {
     public Collection<Film> getPopularFilms(@RequestParam(defaultValue = "10") @Min(0) Integer count,
                                             @RequestParam(required = false) Integer genreId,
                                             @RequestParam(required = false) @Min(1895) Integer year) {
+        log.info("Получили запрос популярных фильмов GET films/popular?count={}&genreId={}&year={}", count, genreId, year);
         Collection<Film> films = filmService.getPopular(count, genreId, year);
+        log.info("В ответ на запрос GET films/popular?count={}&genreId={}&year={} возвращаем фильмы: {}", count, genreId, year, films);
         return films;
     }
 

@@ -20,5 +20,5 @@ public interface FilmStorage {
 
     List<Film> searchFilmsByParameter(String query, boolean searchByTitle, boolean searchByDirector);
 
-    List<Film> getTopPopularWithFilter(Integer count, Integer year, Integer genreId);
+    List<Film> getTopPopularWithFilter(Integer count, Integer genreId, Integer year);
 }
