@@ -96,8 +96,9 @@ public class UserController {
         userService.deleteUserById(id);
     }
 
-    @GetMapping(" /users/{id}/feed")
+    @GetMapping("/{id}/feed")
     public List<Event> getFeed(@PathVariable @Positive Integer id) {
+        log.info("attempt to get users id = {} feed", id);
         return userService.getFeed(id);
     }
 
