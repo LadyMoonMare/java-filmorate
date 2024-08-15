@@ -204,7 +204,7 @@ public class FilmServiceImpl implements FilmService {
 
     public void addEvent(Integer filmId,Integer userId, Operation operation) {
         Event event = new Event();
-        event.setTimestamp(Instant.now().getEpochSecond());
+        event.setTimestamp(Instant.now().toEpochMilli());
         event.setUserId(userId);
         event.setEventType(EventType.LIKE);
         event.setOperation(operation);

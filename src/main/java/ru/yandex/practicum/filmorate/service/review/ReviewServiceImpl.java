@@ -181,7 +181,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     public void addEvent(Review review, Operation operation) {
         Event event = new Event();
-        event.setTimestamp(Instant.now().getEpochSecond());
+        event.setTimestamp(Instant.now().toEpochMilli());
         event.setEventType(EventType.REVIEW);
         event.setOperation(operation);
         event.setUserId(review.getUserId());

@@ -137,7 +137,7 @@ public class UserServiceImpl implements UserService {
 
     public void addEvent(Integer id, Integer friendId, Operation operation) {
         Event event = new Event();
-        event.setTimestamp(Instant.now().getEpochSecond());
+        event.setTimestamp(Instant.now().toEpochMilli());
         event.setUserId(id);
         event.setEntityId(friendId);
         event.setEventType(EventType.FRIEND);
