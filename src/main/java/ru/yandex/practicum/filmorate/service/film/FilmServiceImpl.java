@@ -18,6 +18,7 @@ import ru.yandex.practicum.filmorate.storage.like.LikeStorage;
 import ru.yandex.practicum.filmorate.storage.mpa.MPAStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -203,7 +204,7 @@ public class FilmServiceImpl implements FilmService {
 
     public void addEvent(Integer filmId,Integer userId, Operation operation) {
         Event event = new Event();
-
+        event.setTimestamp(Instant.now().getEpochSecond());
         event.setUserId(userId);
         event.setEventType(EventType.LIKE);
         event.setOperation(operation);

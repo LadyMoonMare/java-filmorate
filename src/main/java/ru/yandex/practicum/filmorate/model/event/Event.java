@@ -6,15 +6,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.sql.Timestamp;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class Event {
     @NotNull
-    private Timestamp timestamp;
+    private Long timestamp;
     @NotNull
     private Integer userId;
     @NotNull

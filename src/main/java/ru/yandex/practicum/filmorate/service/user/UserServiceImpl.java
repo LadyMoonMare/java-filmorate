@@ -13,6 +13,8 @@ import ru.yandex.practicum.filmorate.storage.event.EventStorage;
 import ru.yandex.practicum.filmorate.storage.friends.FriendsStorage;
 import ru.yandex.practicum.filmorate.storage.like.LikeStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -135,6 +137,7 @@ public class UserServiceImpl implements UserService {
 
     public void addEvent(Integer id, Integer friendId, Operation operation) {
         Event event = new Event();
+        event.setTimestamp(Instant.now().getEpochSecond());
         event.setUserId(id);
         event.setEntityId(friendId);
         event.setEventType(EventType.FRIEND);

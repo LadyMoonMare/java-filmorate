@@ -16,6 +16,7 @@ import ru.yandex.practicum.filmorate.storage.like.LikeStorage;
 import ru.yandex.practicum.filmorate.storage.review.ReviewStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -180,6 +181,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     public void addEvent(Review review, Operation operation) {
         Event event = new Event();
+        event.setTimestamp(Instant.now().getEpochSecond());
         event.setEventType(EventType.REVIEW);
         event.setOperation(operation);
         event.setUserId(review.getUserId());
