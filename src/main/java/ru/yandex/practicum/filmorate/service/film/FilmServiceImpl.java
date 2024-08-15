@@ -211,7 +211,7 @@ public class FilmServiceImpl implements FilmService {
         event.setEntityId(filmId);
         es.addEvent(event);
     }
-  
+
     @Override
     public List<Film> getPopular(Integer count, Integer genreId, Integer year) {
         return filmStorage.getTopPopularWithFilter(count, genreId, year);
