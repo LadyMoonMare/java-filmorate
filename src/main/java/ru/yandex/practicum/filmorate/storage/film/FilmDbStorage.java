@@ -257,7 +257,9 @@ public class FilmDbStorage implements FilmStorage {
 
         String finalSql = baseSql + concatJoin + concatWhere + bodySql + concatLimit;
 
-        return getFilms(finalSql, param);
+        //return getFilms(finalSql, param);
+        List<Film> films = jdbc.query(finalSql, param, new FilmRowMapper());
+        return genreDbStorage.loadGenres(films);
 
     }
 
