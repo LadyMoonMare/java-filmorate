@@ -167,6 +167,48 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> getTopPopularWithFilter(Integer count, Integer year, Integer genreId) {
 
+        String concatJoin;
+        String concatWhere;
+        String concatLimit;
+        if (year != null && genreId != null) {
+            concatJoin = "JOIN film_genre ON films.id = film_genre.film_id \n";
+            concatWhere = "WHERE YEAR(films.releaseDate) = :year AND film_genre.genre_id = :genreId \n";
+        } else if (year == null && genreId != null) {
+            concatJoin = "JOIN film_genre ON films.id = film_genre.film_id \n";
+            concatWhere = "WHERE film_genre.genre_id = :genreId \n";
+        } else if (year != null) {
+            concatJoin = " \n";
+            concatWhere = "WHERE YEAR(films.releaseDate) = :year \n";
+        } else {
+            concatJoin = " \n";
+            concatWhere = " \n";
+        }
+        if (count != null) {
+            concatLimit = """
+                    LIMIT :count ;
+                    """;
+        } else {
+            concatLimit = """
+                    ";"
+                    """;
+        }
+        String baseSql = """
+                SELECT
+                    films.id, films.title, films.description, films.releaseDate, films.duration, films.mpa_id, mpa.rating, COUNT(likes.user_id)
+                FROM films
+                         LEFT JOIN likes ON films.id = likes.film_id
+                         JOIN mpa ON films.mpa_id = mpa.mpa_id
+                """;
+
+        String bodySql = """
+                GROUP BY films.id
+                ORDER BY COUNT(likes.user_id) DESC
+                """;
+
+        String finalSql = baseSql + concatJoin + concatWhere + bodySql + concatLimit;
+
+            return jdbcTemplate.query(finalSql, filmRowMapper);
+    }
 //        final String genreAndYearStringSql = """
 //                SELECT films.id, films.title, films.description, films.releaseDate, films.duration, films.mpa_id, mpa.rating, genres.id, genres.name, directors.id, directors.name, count(likes.user_id)
 //                FROM films
@@ -255,116 +297,52 @@ public class FilmDbStorage implements FilmStorage {
 //                ORDER BY count(likes.film_id) DESC
 //                """;
 
-        String concatJoin;
-        String concatWhere;
-        String concatLimit;
-        if (year != null && genreId != null) {
-            concatJoin = "JOIN film_genre ON films.id = film_genre.film_id \n";
-            concatWhere = "WHERE YEAR(films.releaseDate) = :year AND film_genre.genre_id = :genreId \n";
-//            param.put("year", year);
-//            param.put("genreId", genreId);
-        } else if (year == null && genreId != null) {
-            concatJoin = "JOIN film_genre ON films.id = film_genre.film_id \n";
-            concatWhere = "WHERE film_genre.genre_id = :genreId \n";
-//            param.put("genreId", genreId);
-        } else if (year != null) {
-            concatJoin = " \n";
-            concatWhere = "WHERE YEAR(films.releaseDate) = :year \n";
-//            param.put("year", year);
-        } else {
-            concatJoin = " \n";
-            concatWhere = " \n";
-        }
-        if (count != null) {
-            concatLimit = """
-                    LIMIT :count ;
-                    """;
-//            param.put("count", count);
-        } else {
-            concatLimit = """
-                    ";"
-                    """;
-        }
-        String baseSql = """
-                SELECT
-                    films.id,
-                    films.title,
-                    description,
-                    releaseDate,
-                    duration,
-                    films.mpa_id,
-                    mpa.rating AS RATING_NAME
-                FROM FILMS
-                         LEFT JOIN likes ON films.id = likes.film_id
-                         JOIN mpa ON films.mpa_id = mpa.mpa_id
-                """;
 
-        String bodySql = """
-                GROUP BY films.id
-                ORDER BY count(likes.film_id) DESC
-                """;
 
-        String finalSql = baseSql + concatJoin + concatWhere + bodySql + concatLimit;
-
-        if (year != null && genreId != null) {
-            return jdbcTemplate.query(finalSql, filmRowMapper);
-        } else if (year == null && genreId != null) {
-            return jdbcTemplate.query(finalSql, filmRowMapper);
-        }else if (year != null) {
-            return jdbcTemplate.query(finalSql, filmRowMapper);
-        } else {
-            return jdbcTemplate.query(finalSql, filmRowMapper);
-        }
-//        //return getFilms(finalSql, param);
-//        List<Film> films = jdbc.query(finalSql, param, new FilmRowMapper());
-//        return genreDbStorage.loadGenres(films);
-
-    }
-
-    private List<Film> getFilms(String sql, Map<String, Object> param) {
-        List<Film> films = jdbc.query(sql, param, new FilmRowMapper());
-        if (films != null) {
-            genreDbStorage.loadGenres(films);
-            //fillingFilmsWithDirectors(films);
-        }
-        return films;
-    }
-
-    private void fillingFilmsWithGenres(List<Film> films) {
-        String sql = """
-                SELECT film_id,
-                       film_genre.genre_id AS GENRE_ID,
-                       name
-                FROM film_genre
-                    LEFT JOIN genres ON genres.id = film_genre.genre_id
-                WHERE film_id IN (:films_id);
-                """;
-        Map<String, Object> param = Map.of("films_id", films.stream().map(Film::getId).toList());
-        Map<Integer, List<Genre>> genres = (Map<Integer, List<Genre>>) jdbc.query(sql, param, new FilmRowMapper());
-
-        films.forEach(film -> {
-            if (genres != null && genres.containsKey(film.getId())) {
-                film.getGenres().addAll(genres.get(film.getId()));
-            }
-        });
-    }
-
-    private void fillingFilmsWithDirectors(List<Film> films) {
-        String sql = """
-                SELECT film_id,
-                       directors.id AS DIRECTOR_ID,
-                       name
-                FROM film_director
-                LEFT JOIN directors ON film_director.irector_id = directors.id
-                WHERE FILM_ID IN (:films_id);
-                """;
-        Map<String, Object> param = Map.of("films_id", films.stream().map(Film::getId).toList());
-        Map<Integer, List<Director>> directors = (Map<Integer, List<Director>>) jdbc.query(sql, param, new FilmRowMapper());
-
-        films.forEach(film -> {
-            if (directors != null && directors.containsKey(film.getId())) {
-                film.getDirectors().addAll(directors.get(film.getId()));
-            }
-        });
-    }
+//    private List<Film> getFilms(String sql, Map<String, Object> param) {
+//        List<Film> films = jdbc.query(sql, param, new FilmRowMapper());
+//        if (films != null) {
+//            genreDbStorage.loadGenres(films);
+//            //fillingFilmsWithDirectors(films);
+//        }
+//        return films;
+//    }
+//
+//    private void fillingFilmsWithGenres(List<Film> films) {
+//        String sql = """
+//                SELECT film_id,
+//                       film_genre.genre_id AS GENRE_ID,
+//                       name
+//                FROM film_genre
+//                    LEFT JOIN genres ON genres.id = film_genre.genre_id
+//                WHERE film_id IN (:films_id);
+//                """;
+//        Map<String, Object> param = Map.of("films_id", films.stream().map(Film::getId).toList());
+//        Map<Integer, List<Genre>> genres = (Map<Integer, List<Genre>>) jdbc.query(sql, param, new FilmRowMapper());
+//
+//        films.forEach(film -> {
+//            if (genres != null && genres.containsKey(film.getId())) {
+//                film.getGenres().addAll(genres.get(film.getId()));
+//            }
+//        });
+//    }
+//
+//    private void fillingFilmsWithDirectors(List<Film> films) {
+//        String sql = """
+//                SELECT film_id,
+//                       directors.id AS DIRECTOR_ID,
+//                       name
+//                FROM film_director
+//                LEFT JOIN directors ON film_director.irector_id = directors.id
+//                WHERE FILM_ID IN (:films_id);
+//                """;
+//        Map<String, Object> param = Map.of("films_id", films.stream().map(Film::getId).toList());
+//        Map<Integer, List<Director>> directors = (Map<Integer, List<Director>>) jdbc.query(sql, param, new FilmRowMapper());
+//
+//        films.forEach(film -> {
+//            if (directors != null && directors.containsKey(film.getId())) {
+//                film.getDirectors().addAll(directors.get(film.getId()));
+//            }
+//        });
+//    }
 }
