@@ -166,10 +166,10 @@ public class FilmDbStorage implements FilmStorage {
         String concatLimit;
         if (year != null && genreId != null) {
             concatJoin = "JOIN film_genre ON films.id = film_genre.film_id \n";
-            concatWhere = "WHERE YEAR(films.releaseDate) = :year AND film_genre.genre_id = :genreId \n";
+            concatWhere = "WHERE YEAR(films.releaseDate) = ? AND film_genre.genre_id = ? \n";
         } else if (year == null && genreId != null) {
             concatJoin = "JOIN film_genre ON films.id = film_genre.film_id \n";
-            concatWhere = "WHERE film_genre.genre_id = :genreId \n";
+            concatWhere = "WHERE film_genre.genre_id = ? \n";
         } else if (year != null) {
             concatJoin = " \n";
             concatWhere = "WHERE YEAR(films.releaseDate) = :year \n";
@@ -179,7 +179,7 @@ public class FilmDbStorage implements FilmStorage {
         }
         if (count != null) {
             concatLimit = """
-                    LIMIT :count ;
+                    LIMIT ? ;
                     """;
         } else {
             concatLimit = """
@@ -201,7 +201,15 @@ public class FilmDbStorage implements FilmStorage {
 
         String finalSql = baseSql + concatJoin + concatWhere + bodySql + concatLimit;
 
-            return jdbcTemplate.query(finalSql, filmRowMapper);
+        if (year != null && genreId != null) {
+            return jdbcTemplate.query(finalSql, filmRowMapper, year, genreId, count);
+        } else if (year == null && genreId != null) {
+            return jdbcTemplate.query(finalSql, filmRowMapper, genreId, count);
+        } else if (year != null) {
+            return jdbcTemplate.query(finalSql, filmRowMapper, year, count);
+        } else {
+            return jdbcTemplate.query(finalSql, filmRowMapper, count);
+        }
     }
 //        final String genreAndYearStringSql = """
 //                SELECT films.id, films.title, films.description, films.releaseDate, films.duration, films.mpa_id, mpa.rating, genres.id, genres.name, directors.id, directors.name, count(likes.user_id)
