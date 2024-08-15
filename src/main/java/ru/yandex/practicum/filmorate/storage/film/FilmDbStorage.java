@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.exception.DataNotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 
 import java.sql.PreparedStatement;
@@ -26,6 +27,7 @@ public class FilmDbStorage implements FilmStorage {
     private final JdbcOperations jdbcTemplate;
     private final FilmRowMapper filmRowMapper;
     private final NamedParameterJdbcOperations jdbc;
+    private final GenreDbStorage genreDbStorage;
 
     @Override
     public List<Film> getAllFilms() {
@@ -262,8 +264,8 @@ public class FilmDbStorage implements FilmStorage {
     private List<Film> getFilms(String sql, Map<String, Object> param) {
         List<Film> films = jdbc.query(sql, param, new FilmRowMapper());
         if (films != null) {
-            fillingFilmsWithGenres(films);
-            fillingFilmsWithDirectors(films);
+            genreDbStorage.loadGenres(films);
+            //fillingFilmsWithDirectors(films);
         }
         return films;
     }
