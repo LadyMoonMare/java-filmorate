@@ -110,10 +110,8 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public void addLike(Integer id, Integer userId) {
-        userStorage.findUserById(userId).orElseThrow(() -> {
-            log.warn("User with id {} not found",userId);
-            return new DataNotFoundException("user not found");
-        });
+        getFilmById(id);
+        validateUser(userId);
 
         ls.addLike(id, userId);
         log.info("user {} successfully liked film {}", userId, id);
@@ -124,10 +122,8 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public void removeLike(Integer id, Integer userId) {
-        userStorage.findUserById(userId).orElseThrow(() -> {
-            log.warn("User with id {} not found",userId);
-            return new DataNotFoundException("user not found");
-        });
+        getFilmById(id);
+        validateUser(userId);
 
         ls.removeLike(id, userId);
         log.info("user {} successfully removed like from film {}", userId, id);
@@ -169,12 +165,8 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public List<Film> getCommonFilms(Integer userId, Integer friendId) {
-        Stream.of(userId, friendId).forEach(id ->
-                userStorage.findUserById(id).orElseThrow(() -> {
-                    log.warn("User with id {} not found", id);
-                    return new DataNotFoundException("User with id " + id + " not found");
-                })
-        );
+        Stream.of(userId, friendId).forEach(this::validateUser);
+
         // Добавил проверку на подтверждённую дружбу, но в тестах Postman и у обоих пользователей вообще нет друзей =(
         /*if (friendsStorages.getFriendsFromDb(userId).stream()
                 .map(User::getId)
@@ -215,5 +207,12 @@ public class FilmServiceImpl implements FilmService {
     @Override
     public List<Film> getPopular(Integer count, Integer genreId, Integer year) {
         return filmStorage.getTopPopularWithFilter(count, genreId, year);
+    }
+
+    public void validateUser(Integer userId) {
+        userStorage.findUserById(userId).orElseThrow(() -> {
+            log.warn("User with id {} not found",userId);
+            return new DataNotFoundException("user not found");
+        });
     }
 }
