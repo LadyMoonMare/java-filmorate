@@ -126,7 +126,7 @@ public class FilmController {
         return films;
     }
 
-    @GetMapping(value = "/films/popular")
+    @GetMapping(value = "/popular")
     public Collection<Film> getPopularFilms(@RequestParam(defaultValue = "10") @Min(0) Integer count,
                                             @RequestParam(required = false) Integer genreId,
 //                                            @RequestParam(defaultValue = "0") Integer genreId,
