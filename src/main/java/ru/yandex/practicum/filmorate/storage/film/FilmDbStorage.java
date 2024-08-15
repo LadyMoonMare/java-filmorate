@@ -9,12 +9,12 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.DataNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.genre.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -23,6 +23,7 @@ import java.util.Optional;
 public class FilmDbStorage implements FilmStorage {
     private final JdbcOperations jdbcTemplate;
     private final FilmRowMapper filmRowMapper;
+    private final GenreDbStorage genreDbStorage;
 
     @Override
     public List<Film> getAllFilms() {
@@ -157,5 +158,39 @@ public class FilmDbStorage implements FilmStorage {
         } else {
             return jdbcTemplate.query(sqlSearchByDirector, filmRowMapper, "%" + query + "%");
         }
+    }
+
+    @Override
+    public List<Film> getTopPopularWithFilter(Integer limit, Integer genreId, Integer year) {
+        final StringBuilder sql = new StringBuilder(
+                "SELECT f.id, f.title, f.description, f.releaseDate, f.duration, f.mpa_id, m.rating, COUNT(l.user_id) AS like_count " +
+                        "FROM films AS f " +
+                        "JOIN mpa AS m ON f.mpa_id = m.mpa_id " +
+                        "LEFT JOIN film_genre AS fg ON f.id = fg.film_id " +
+                        "LEFT JOIN likes AS l ON f.id = l.film_id "
+        );
+
+        final List<Object> params = new ArrayList<>();
+
+        if (genreId != null || year != null) {
+            sql.append("WHERE ");
+            if (genreId != null) {
+                sql.append("fg.genre_id = ? ");
+                params.add(genreId);
+            }
+            if (year != null) {
+                if (genreId != null) {
+                    sql.append("AND ");
+                }
+                sql.append("YEAR(f.releaseDate) = ? ");
+                params.add(year);
+            }
+        }
+
+        sql.append("GROUP BY f.id, f.title, f.description, f.releaseDate, f.duration, f.mpa_id, m.rating ");
+        sql.append("ORDER BY like_count DESC, f.id DESC LIMIT ?");
+        params.add(limit);
+        log.info("Сформировали SQL-запрос: {}", sql);
+        return jdbcTemplate.query(sql.toString(), filmRowMapper, params.toArray());
     }
 }

@@ -70,6 +70,11 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
+    public List<Film> getTopPopularWithFilter(Integer count, Integer year, Integer genreId) {
+        return List.of();
+    }
+
+    @Override
     public List<Film> searchFilmsByParameter(String query, boolean searchByTitle, boolean searchByDirector) {
         return List.of();
     }

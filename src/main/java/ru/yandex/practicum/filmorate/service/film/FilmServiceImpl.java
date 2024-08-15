@@ -136,9 +136,9 @@ public class FilmServiceImpl implements FilmService {
         addEvent(id, userId, Operation.REMOVE);
     }
 
-    @Override
+        @Override
     public List<Film> getPopularFilms(Integer count) {
-        List<Film> popularFilms = filmStorage.getAllFilms().stream()
+            List<Film> films = filmStorage.getAllFilms().stream()
                 .sorted(new Comparator<Film>() {
                     @Override
                     public int compare(Film o1, Film o2) {
@@ -148,8 +148,8 @@ public class FilmServiceImpl implements FilmService {
                 })
                 .limit(count)
                 .toList();
-        gs.loadGenres(popularFilms);
-        return popularFilms;
+        gs.loadGenres(films);
+        return films;
     }
 
     @Override
@@ -210,5 +210,10 @@ public class FilmServiceImpl implements FilmService {
         event.setOperation(operation);
         event.setEntityId(filmId);
         es.addEvent(event);
+    }
+  
+    @Override
+    public List<Film> getPopular(Integer count, Integer genreId, Integer year) {
+        return filmStorage.getTopPopularWithFilter(count, genreId, year);
     }
 }
