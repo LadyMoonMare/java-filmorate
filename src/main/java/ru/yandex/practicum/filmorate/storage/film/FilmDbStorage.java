@@ -204,7 +204,56 @@ public class FilmDbStorage implements FilmStorage {
 //        }
 //        return new ArrayList<>();
 
-        Map<String, Object> param = new HashMap<>();
+//        Map<String, Object> param = new HashMap<>();
+//
+//        String concatJoin;
+//        String concatWhere;
+//        String concatLimit;
+//        if (year != null && genreId != null) {
+//            concatJoin = "JOIN film_genre ON films.id = film_genre.film_id \n";
+//            concatWhere = "WHERE YEAR(films.releaseDate) = :year AND film_genre.genre_id = :genreId \n";
+//            param.put("year", year);
+//            param.put("genreId", genreId);
+//        } else if (year == null && genreId != null) {
+//            concatJoin = "JOIN film_genre ON films.id = film_genre.film_id \n";
+//            concatWhere = "WHERE film_genre.genre_id = :genreId \n";
+//            param.put("genreId", genreId);
+//        } else if (year != null) {
+//            concatJoin = " \n";
+//            concatWhere = "WHERE YEAR(films.releaseDate) = :year \n";
+//            param.put("year", year);
+//        } else {
+//            concatJoin = " \n";
+//            concatWhere = " \n";
+//        }
+//        if (count != null) {
+//            concatLimit = """
+//                    LIMIT :count ;
+//                    """;
+//            param.put("count", count);
+//        } else {
+//            concatLimit = """
+//                    ";"
+//                    """;
+//        }
+//        String baseSql = """
+//                SELECT
+//                    films.id,
+//                    films.title,
+//                    description,
+//                    releaseDate,
+//                    duration,
+//                    films.mpa_id,
+//                    mpa.rating AS RATING_NAME
+//                FROM FILMS
+//                         LEFT JOIN likes ON films.id = likes.film_id
+//                         JOIN mpa ON films.mpa_id = mpa.mpa_id
+//                """;
+//
+//        String bodySql = """
+//                GROUP BY films.id
+//                ORDER BY count(likes.film_id) DESC
+//                """;
 
         String concatJoin;
         String concatWhere;
@@ -212,16 +261,16 @@ public class FilmDbStorage implements FilmStorage {
         if (year != null && genreId != null) {
             concatJoin = "JOIN film_genre ON films.id = film_genre.film_id \n";
             concatWhere = "WHERE YEAR(films.releaseDate) = :year AND film_genre.genre_id = :genreId \n";
-            param.put("year", year);
-            param.put("genreId", genreId);
+//            param.put("year", year);
+//            param.put("genreId", genreId);
         } else if (year == null && genreId != null) {
             concatJoin = "JOIN film_genre ON films.id = film_genre.film_id \n";
             concatWhere = "WHERE film_genre.genre_id = :genreId \n";
-            param.put("genreId", genreId);
+//            param.put("genreId", genreId);
         } else if (year != null) {
             concatJoin = " \n";
             concatWhere = "WHERE YEAR(films.releaseDate) = :year \n";
-            param.put("year", year);
+//            param.put("year", year);
         } else {
             concatJoin = " \n";
             concatWhere = " \n";
@@ -230,7 +279,7 @@ public class FilmDbStorage implements FilmStorage {
             concatLimit = """
                     LIMIT :count ;
                     """;
-            param.put("count", count);
+//            param.put("count", count);
         } else {
             concatLimit = """
                     ";"
@@ -257,9 +306,18 @@ public class FilmDbStorage implements FilmStorage {
 
         String finalSql = baseSql + concatJoin + concatWhere + bodySql + concatLimit;
 
-        //return getFilms(finalSql, param);
-        List<Film> films = jdbc.query(finalSql, param, new FilmRowMapper());
-        return genreDbStorage.loadGenres(films);
+        if (year != null && genreId != null) {
+            return jdbcTemplate.query(finalSql, filmRowMapper);
+        } else if (year == null && genreId != null) {
+            return jdbcTemplate.query(finalSql, filmRowMapper);
+        }else if (year != null) {
+            return jdbcTemplate.query(finalSql, filmRowMapper);
+        } else {
+            return jdbcTemplate.query(finalSql, filmRowMapper);
+        }
+//        //return getFilms(finalSql, param);
+//        List<Film> films = jdbc.query(finalSql, param, new FilmRowMapper());
+//        return genreDbStorage.loadGenres(films);
 
     }
 
