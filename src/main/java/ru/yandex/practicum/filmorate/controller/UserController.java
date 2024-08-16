@@ -57,14 +57,14 @@ public class UserController {
 
     @Validated
     @GetMapping("/{id}/friends")
-    public List<User> getUserFriends(@PathVariable @Positive Integer id) {
+    public List<User> getUserFriends(@PathVariable Integer id) {
         log.info("attempt to get user friend list by id {}",id);
         return userService.getUserFriends(id);
     }
 
     @Validated
     @PutMapping("/{id}/friends/{friendId}")
-    public void addFriend(@PathVariable @Positive Integer id, @PathVariable @Positive Integer friendId) {
+    public void addFriend(@PathVariable Integer id, @PathVariable Integer friendId) {
         log.info("attempt to add user {} to user's {} friend list", friendId, id);
         userService.addFriend(id, friendId);
     }
