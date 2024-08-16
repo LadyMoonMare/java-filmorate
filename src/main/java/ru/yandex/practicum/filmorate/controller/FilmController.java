@@ -18,7 +18,8 @@ import ru.yandex.practicum.filmorate.service.mpa.MPAService;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -35,7 +36,10 @@ public class FilmController {
 
     @GetMapping
     public List<Film> getAllFilms() {
-        return filmService.getAllFilms();
+        log.info("Получили запрос всех фильмов. GET /films");
+        final List<Film> allFilms = filmService.getAllFilms();
+        log.info("В ответ на запрос всех фильмов GET /films, возвращаем список: {}", allFilms);
+        return allFilms;
     }
 
     @PostMapping
