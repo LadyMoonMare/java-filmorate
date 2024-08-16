@@ -206,7 +206,9 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public List<Film> getPopular(Integer count, Integer genreId, Integer year) {
-        return filmStorage.getTopPopularWithFilter(count, genreId, year);
+        List<Film> popularFilms = filmStorage.getTopPopularWithFilter(count, genreId, year);
+        popularFilms = gs.loadGenres(popularFilms);
+        return directorStorage.loadDirectors(popularFilms);
     }
 
     public void validateUser(Integer userId) {
