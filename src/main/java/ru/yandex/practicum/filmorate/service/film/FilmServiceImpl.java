@@ -7,13 +7,18 @@ import ru.yandex.practicum.filmorate.exception.DataNotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.event.Event;
+import ru.yandex.practicum.filmorate.model.event.EventType;
+import ru.yandex.practicum.filmorate.model.event.Operation;
 import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
+import ru.yandex.practicum.filmorate.storage.event.EventStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.like.LikeStorage;
 import ru.yandex.practicum.filmorate.storage.mpa.MPAStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -31,6 +36,7 @@ public class FilmServiceImpl implements FilmService {
     private final GenreStorage gs;
     private final DirectorStorage directorStorage;
     private final UserStorage userStorage;
+    private final EventStorage es;
     // private final FriendsStorage friendsStorages;
     private final Comparator<Genre> comparator = new Comparator<Genre>() {
         @Override
@@ -104,14 +110,26 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public void addLike(Integer id, Integer userId) {
+        getFilmById(id);
+        validateUser(userId);
+
         ls.addLike(id, userId);
         log.info("user {} successfully liked film {}", userId, id);
+
+        log.info("attempt to add like-event to feed");
+        addEvent(id, userId, Operation.ADD);
     }
 
     @Override
     public void removeLike(Integer id, Integer userId) {
+        getFilmById(id);
+        validateUser(userId);
+
         ls.removeLike(id, userId);
         log.info("user {} successfully removed like from film {}", userId, id);
+
+        log.info("attempt to add remove-like-film event");
+        addEvent(id, userId, Operation.REMOVE);
     }
 
         @Override
@@ -147,12 +165,8 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public List<Film> getCommonFilms(Integer userId, Integer friendId) {
-        Stream.of(userId, friendId).forEach(id ->
-                userStorage.findUserById(id).orElseThrow(() -> {
-                    log.warn("User with id {} not found", id);
-                    return new DataNotFoundException("User with id " + id + " not found");
-                })
-        );
+        Stream.of(userId, friendId).forEach(this::validateUser);
+
         // Добавил проверку на подтверждённую дружбу, но в тестах Postman и у обоих пользователей вообще нет друзей =(
         /*if (friendsStorages.getFriendsFromDb(userId).stream()
                 .map(User::getId)
@@ -180,8 +194,25 @@ public class FilmServiceImpl implements FilmService {
         return directorStorage.loadDirectors(searchedFilms);
     }
 
+    public void addEvent(Integer filmId,Integer userId, Operation operation) {
+        Event event = new Event();
+        event.setTimestamp(Instant.now().toEpochMilli());
+        event.setUserId(userId);
+        event.setEventType(EventType.LIKE);
+        event.setOperation(operation);
+        event.setEntityId(filmId);
+        es.addEvent(event);
+    }
+
     @Override
     public List<Film> getPopular(Integer count, Integer genreId, Integer year) {
         return filmStorage.getTopPopularWithFilter(count, genreId, year);
+    }
+
+    public void validateUser(Integer userId) {
+        userStorage.findUserById(userId).orElseThrow(() -> {
+            log.warn("User with id {} not found",userId);
+            return new DataNotFoundException("user not found");
+        });
     }
 }

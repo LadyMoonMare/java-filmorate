@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.event.Event;
 import ru.yandex.practicum.filmorate.service.user.UserService;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -93,6 +94,12 @@ public class UserController {
     @DeleteMapping("/{id}")
     public void deleteUserById(@PathVariable @Positive Integer id) {
         userService.deleteUserById(id);
+    }
+
+    @GetMapping("/{id}/feed")
+    public List<Event> getFeed(@PathVariable @Positive Integer id) {
+        log.info("attempt to get users id = {} feed", id);
+        return userService.getFeed(id);
     }
 
     public void validateUser(User user) {
