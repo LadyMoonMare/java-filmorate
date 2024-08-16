@@ -73,6 +73,7 @@ public class GenreDbStorage implements GenreStorage {
             film.setGenres(new LinkedHashSet<>());
             f.put(film.getId(), film);
         });
+        log.info("Сформировали Map с фильмами для которых загружаем жанры: {}", f);
         getAllGenres().forEach(genre -> genres.put(genre.getId(), genre));
         jdbcTemplate.query("SELECT * FROM film_genre",
                 (rs) -> {
@@ -83,9 +84,12 @@ public class GenreDbStorage implements GenreStorage {
                         а только некоторой выборке (например по режиссеру). Тогда фильма
                         с искомым id может не оказаться в Map<Integer, Film> f
                          */
+                        log.info("Из таблицы связей фильм-жанры получили film_id: {}", filmId);
                         Film film = f.get(filmId);
+                        log.info("Из Map с фильмами получили фильм которому сетим жанры: {}", film);
                         if (film != null) {
                             film.getGenres().add(genres.get(rs.getInt("genre_id")));
+                            log.info("Присвоили фильму жанр {}", film);
                         }
                     }
 

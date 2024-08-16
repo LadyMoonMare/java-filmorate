@@ -5,13 +5,13 @@ VALUES ('G'),
        ('R'),
        ('NC-17');
 
-INSERT INTO genres (name)
-VALUES ('Комедия'),
-       ('Драма'),
-       ('Мультфильм'),
-       ('Триллер'),
-       ('Документальный'),
-       ('Боевик');
+INSERT INTO genres (id, name)
+VALUES (1, 'Комедия'),
+       (2, 'Драма'),
+       (3, 'Мультфильм'),
+       (4, 'Триллер'),
+       (5, 'Документальный'),
+       (6, 'Боевик');
 
 INSERT INTO event_type (event_name)
 VALUES ('LIKE'),
