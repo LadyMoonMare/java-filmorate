@@ -41,9 +41,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User updateUser(User user) {
-        User u = getUserById(user.getId());
-        userStorage.updateUser(u);
-        return u;
+        getUserById(user.getId());
+        userStorage.updateUser(user);
+        return user;
     }
 
     @Override
