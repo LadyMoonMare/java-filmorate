@@ -201,6 +201,8 @@ public class DirectorDbStorage implements DirectorStorage {
         final MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("filmId", film.getId());
         final List<Director> directors = jdbc.query(directorsSql, params, new DirectorRowMapper());
+        log.info("Получили из БД режиссеров фильма с id: {}. Режиссеры: {}", film.getId(), directors);
+        film.setDirectors(new HashSet<>(directors));
         return film;
     }
 }
