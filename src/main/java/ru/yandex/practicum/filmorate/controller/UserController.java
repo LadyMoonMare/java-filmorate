@@ -11,10 +11,9 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.model.event.Event;
 import ru.yandex.practicum.filmorate.service.user.UserService;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,11 +22,13 @@ import java.util.*;
 @Validated
 public class UserController {
     private final UserService userService;
-    private final UserStorage userStorage;
 
     @GetMapping
     public List<User> getAllUsers() {
-        return userService.getAllUsers();
+        log.info("Получили запрос всех пользователей. GET /users");
+        final List<User> allUsers = userService.getAllUsers();
+        log.info("В ответ на запрос всех пользователей GET /users, возвращаем список: {}", allUsers);
+        return allUsers;
     }
 
     @PostMapping
@@ -56,14 +57,14 @@ public class UserController {
 
     @Validated
     @GetMapping("/{id}/friends")
-    public List<User> getUserFriends(@PathVariable @Positive Integer id) {
+    public List<User> getUserFriends(@PathVariable Integer id) {
         log.info("attempt to get user friend list by id {}",id);
         return userService.getUserFriends(id);
     }
 
     @Validated
     @PutMapping("/{id}/friends/{friendId}")
-    public void addFriend(@PathVariable @Positive Integer id, @PathVariable @Positive Integer friendId) {
+    public void addFriend(@PathVariable Integer id, @PathVariable Integer friendId) {
         log.info("attempt to add user {} to user's {} friend list", friendId, id);
         userService.addFriend(id, friendId);
     }
@@ -87,7 +88,10 @@ public class UserController {
     @Validated
     @GetMapping("/{id}/recommendations") // Функциональность «Рекомендации»
     public List<Film> getRecommendations(@PathVariable("id") @Positive Integer userId) {
-        return userService.getRecommendations(userId);
+        log.info("Получили запрос рекомендаций GET /users/{}/recommendations", userId);
+        final List<Film> recommendedFilms = userService.getRecommendations(userId);
+        log.info("В ответ на запрос рекомендаций GET /users/{}/recommendations, возвращаем фильмы: {}", userId, recommendedFilms);
+        return recommendedFilms;
     }
 
     @Validated

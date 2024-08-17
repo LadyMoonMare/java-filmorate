@@ -18,7 +18,8 @@ import ru.yandex.practicum.filmorate.service.mpa.MPAService;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -35,30 +36,37 @@ public class FilmController {
 
     @GetMapping
     public List<Film> getAllFilms() {
-        return filmService.getAllFilms();
+        log.info("Получили запрос всех фильмов. GET /films");
+        final List<Film> allFilms = filmService.getAllFilms();
+        log.info("В ответ на запрос всех фильмов GET /films, возвращаем список: {}", allFilms);
+        return allFilms;
     }
 
     @PostMapping
     public Film addFilm(@Valid @RequestBody Film film) {
         log.info("addFilm attempt {}", film);
         validateFilm(film);
-        filmService.addFilm(film);
-        return film;
+        final Film savedFilm = filmService.addFilm(film);
+        log.info("В ответ на запрос POST /films возвращаем сохраненный фильм{}", savedFilm);
+        return savedFilm;
     }
 
     @PutMapping
     public Film updateFilm(@Valid @RequestBody Film film) {
         log.info("updateFilm attempt {}", film);
         validateFilm(film);
-        filmService.updateFilm(film);
-        return film;
+        final Film updatedFilm = filmService.updateFilm(film);
+        log.info("В ответ на запрос PUT /films получили обновленный фильм {}", updatedFilm);
+        return updatedFilm;
     }
 
     @Validated
     @GetMapping("/{id}")
     public Film getFilmById(@PathVariable @Positive Integer id) {
         log.info("attempt to get film by id {}", id);
-        return filmService.getFilmById(id);
+        final Film film = filmService.getFilmById(id);
+        log.info("В ответ на запрос GET /films/{} получили фильм {}", id, film);
+        return film;
     }
 
     @Validated
@@ -77,8 +85,8 @@ public class FilmController {
 
     @Validated
     @DeleteMapping("/{id}/like/{userId}")
-    public void removeLike(@PathVariable @Positive Integer id,
-                           @PathVariable @Positive Integer userId) {
+    public void removeLike(@PathVariable Integer id,
+                           @PathVariable Integer userId) {
         log.info("attempt remove like from film {} by user {}", id, userId);
         filmService.removeLike(id, userId);
     }

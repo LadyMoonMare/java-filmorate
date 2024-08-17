@@ -47,11 +47,11 @@ public class ReviewController {
 
     @Validated
     @GetMapping()
-    public List<Review> getAllReviews(@RequestParam(defaultValue = "null") @Positive Integer filmId,
+    public List<Review> getAllReviews(@RequestParam (required = false) @Positive Integer filmId,
                                       @RequestParam(defaultValue = "10") @Positive Integer count) {
         if (filmId == null) {
             log.info("filmId is null. attempt to get all reviews");
-            return  rs.getAllReviews(count);
+            return rs.getAllReviews(count);
         } else {
             log.info("attempt to get all reviews about film number {}", filmId);
             return rs.getAllReviewsByFilmId(filmId, count);

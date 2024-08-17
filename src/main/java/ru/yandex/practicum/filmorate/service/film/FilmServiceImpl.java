@@ -48,7 +48,7 @@ public class FilmServiceImpl implements FilmService {
     @Override
     public List<Film> getAllFilms() {
         List<Film> films = filmStorage.getAllFilms();
-        return gs.loadGenres(films);
+        return directorStorage.loadDirectors(gs.loadGenres(films));
     }
 
     @Override
@@ -82,8 +82,8 @@ public class FilmServiceImpl implements FilmService {
             film.setGenres(new LinkedHashSet<>(gs.getGenresByFilmId(film.getId())));
         }
         //Обновляем связь "фильм - режиссер" по аналогии с жанрами выше
+        directorStorage.removeFilmDirector(film.getId());
         if (film.getDirectors() != null) {
-            directorStorage.removeFilmDirector(film.getId());
             directorStorage.setDirectorsToFilm(film);
         }
         return filmStorage.updateFilm(film);
@@ -99,7 +99,7 @@ public class FilmServiceImpl implements FilmService {
         );
         film.setGenres(new LinkedHashSet<>(gs.getGenresByFilmId(id).stream().sorted(comparator)
                 .toList()));
-        return film;
+        return directorStorage.loadDirectorsByFilm(film);
     }
 
     @Override
@@ -206,7 +206,9 @@ public class FilmServiceImpl implements FilmService {
 
     @Override
     public List<Film> getPopular(Integer count, Integer genreId, Integer year) {
-        return filmStorage.getTopPopularWithFilter(count, genreId, year);
+        List<Film> popularFilms = filmStorage.getTopPopularWithFilter(count, genreId, year);
+        popularFilms = gs.loadGenres(popularFilms);
+        return directorStorage.loadDirectors(popularFilms);
     }
 
     public void validateUser(Integer userId) {
