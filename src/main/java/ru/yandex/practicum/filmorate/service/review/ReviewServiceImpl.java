@@ -46,9 +46,12 @@ public class ReviewServiceImpl implements ReviewService {
     public Review updateReview(Review review) {
         fs.findFilmById(review.getFilmId());
         us.findUserById(review.getUserId());
-
-        review.setReviewId(rs.findReviewIdByParams(review.getFilmId(), review.getUserId()));
-        review = rs.updateReview(review);
+        Review savedReview = getReview(review.getReviewId());
+//        review.setReviewId(rs.findReviewIdByParams(review.getFilmId(), review.getUserId()));
+        savedReview.setContent(review.getContent());
+        savedReview.setIsPositive(review.getIsPositive());
+        review.setUseful(review.getUseful());
+        review = rs.updateReview(savedReview);
         addEvent(review, Operation.UPDATE);
         return review;
     }

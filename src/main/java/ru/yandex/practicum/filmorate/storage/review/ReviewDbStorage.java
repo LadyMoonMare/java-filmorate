@@ -22,7 +22,7 @@ public class ReviewDbStorage implements ReviewStorage {
     @Override
     public Review addReview(Review review) {
         GeneratedKeyHolder kh = new GeneratedKeyHolder();
-        log.info("attempt to add review to database");
+        log.info("attempt to add review to database: {}", review);
 
         jo.update(connection -> {
             PreparedStatement ps = connection.prepareStatement("INSERT INTO reviews(content, " +
@@ -38,7 +38,7 @@ public class ReviewDbStorage implements ReviewStorage {
 
         review.setReviewId(kh.getKeyAs(Integer.class));
 
-        log.info("review successfully added to database");
+        log.info("review successfully added to database: {}", review);
         return review;
     }
 
