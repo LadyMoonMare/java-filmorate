@@ -188,7 +188,7 @@ public class FilmDbStorage implements FilmStorage {
         }
 
         sql.append("GROUP BY f.id, f.title, f.description, f.releaseDate, f.duration, f.mpa_id, m.rating ");
-        sql.append("ORDER BY like_count DESC, f.id DESC LIMIT ?");
+        sql.append("ORDER BY like_count DESC LIMIT ?");
         params.add(limit);
         log.info("Сформировали SQL-запрос: {}", sql);
         return jdbcTemplate.query(sql.toString(), filmRowMapper, params.toArray());
