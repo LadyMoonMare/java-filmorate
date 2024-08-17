@@ -23,4 +23,6 @@ public interface DirectorStorage {
     void removeFilmDirector(int id);
 
     List<Film> loadDirectors(List<Film> directorFilms);
+
+    Film loadDirectorsByFilm(Film film);
 }

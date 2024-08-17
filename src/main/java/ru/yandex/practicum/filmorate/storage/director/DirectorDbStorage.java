@@ -189,4 +189,18 @@ public class DirectorDbStorage implements DirectorStorage {
     // Класс для представления связи между фильмом и режиссером
     private record FilmDirectorRelation(int filmId, int directorId) {
     }
+
+    @Override
+    public Film loadDirectorsByFilm(Film film) {
+        final String directorsSql = """
+                SELECT id, name
+                FROM directors AS d
+                JOIN film_director AS fd ON fd.director_id = d.id
+                WHERE fd.film_id = :filmId;
+                """;
+        final MapSqlParameterSource params = new MapSqlParameterSource();
+        params.addValue("filmId", film.getId());
+        final List<Director> directors = jdbc.query(directorsSql, params, new DirectorRowMapper());
+        return film;
+    }
 }

@@ -48,7 +48,7 @@ public class FilmServiceImpl implements FilmService {
     @Override
     public List<Film> getAllFilms() {
         List<Film> films = filmStorage.getAllFilms();
-        return gs.loadGenres(films);
+        return directorStorage.loadDirectors(gs.loadGenres(films));
     }
 
     @Override
@@ -99,7 +99,7 @@ public class FilmServiceImpl implements FilmService {
         );
         film.setGenres(new LinkedHashSet<>(gs.getGenresByFilmId(id).stream().sorted(comparator)
                 .toList()));
-        return film;
+        return directorStorage.loadDirectorsByFilm(film);
     }
 
     @Override
