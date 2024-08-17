@@ -88,7 +88,10 @@ public class UserController {
     @Validated
     @GetMapping("/{id}/recommendations") // Функциональность «Рекомендации»
     public List<Film> getRecommendations(@PathVariable("id") @Positive Integer userId) {
-        return userService.getRecommendations(userId);
+        log.info("Получили запрос рекомендаций GET /users/{}/recommendations", userId);
+        final List<Film> recommendedFilms = userService.getRecommendations(userId);
+        log.info("В ответ на запрос рекомендаций GET /users/{}/recommendations, возвращаем фильмы: {}", userId, recommendedFilms);
+        return recommendedFilms;
     }
 
     @Validated

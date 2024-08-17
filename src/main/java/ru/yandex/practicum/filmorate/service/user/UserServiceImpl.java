@@ -9,8 +9,10 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.model.event.Event;
 import ru.yandex.practicum.filmorate.model.event.EventType;
 import ru.yandex.practicum.filmorate.model.event.Operation;
+import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.event.EventStorage;
 import ru.yandex.practicum.filmorate.storage.friends.FriendsStorage;
+import ru.yandex.practicum.filmorate.storage.genre.GenreStorage;
 import ru.yandex.practicum.filmorate.storage.like.LikeStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -27,6 +29,8 @@ public class UserServiceImpl implements UserService {
     private final FriendsStorage fs;
     private final LikeStorage likeStorage;
     private final EventStorage es;
+    private final DirectorStorage directorStorage;
+    private final GenreStorage genreStorage;
 
     @Override
     public List<User> getAllUsers() {
@@ -124,9 +128,10 @@ public class UserServiceImpl implements UserService {
         if (candidateId == null) {
             return Collections.emptyList();
         }
-        return likeStorage.getFilmLikes(candidateId).stream()
+        final List<Film> recommendedFilms = likeStorage.getFilmLikes(candidateId).stream()
                 .filter(film -> !filmLikes.contains(film))
-                .collect(Collectors.toList());
+                .toList();
+        return directorStorage.loadDirectors(genreStorage.loadGenres(recommendedFilms));
     }
 
     @Override
