@@ -82,8 +82,8 @@ public class FilmServiceImpl implements FilmService {
             film.setGenres(new LinkedHashSet<>(gs.getGenresByFilmId(film.getId())));
         }
         //Обновляем связь "фильм - режиссер" по аналогии с жанрами выше
+        directorStorage.removeFilmDirector(film.getId());
         if (film.getDirectors() != null) {
-            directorStorage.removeFilmDirector(film.getId());
             directorStorage.setDirectorsToFilm(film);
         }
         return filmStorage.updateFilm(film);
