@@ -13,9 +13,20 @@ public interface FilmService {
 
     Film getFilmById(Integer id);
 
+    void deleteFilmById(Integer id);
+
     void addLike(Integer id, Integer userId);
 
     void removeLike(Integer id, Integer userId);
 
     List<Film> getPopularFilms(Integer count);
+
+    List<Film> getFilmsByDirector(int directorId, String sortBy);
+
+    // Функциональность «Общие фильмы»
+    List<Film> getCommonFilms(Integer userId, Integer friendId);
+
+    List<Film> searchFilms(String query, List<String> by);
+
+    List<Film> getPopular(Integer count, Integer genreId, Integer year);
 }

@@ -1,6 +1,9 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +18,8 @@ import ru.yandex.practicum.filmorate.service.mpa.MPAService;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -32,71 +36,125 @@ public class FilmController {
 
     @GetMapping
     public List<Film> getAllFilms() {
-        return filmService.getAllFilms();
+        log.info("Получили запрос всех фильмов. GET /films");
+        final List<Film> allFilms = filmService.getAllFilms();
+        log.info("В ответ на запрос всех фильмов GET /films, возвращаем список: {}", allFilms);
+        return allFilms;
     }
 
     @PostMapping
     public Film addFilm(@Valid @RequestBody Film film) {
-        log.info("addFilm attempt {}",film);
+        log.info("addFilm attempt {}", film);
         validateFilm(film);
-        filmService.addFilm(film);
-        return film;
+        final Film savedFilm = filmService.addFilm(film);
+        log.info("В ответ на запрос POST /films возвращаем сохраненный фильм{}", savedFilm);
+        return savedFilm;
     }
 
     @PutMapping
     public Film updateFilm(@Valid @RequestBody Film film) {
-        log.info("updateFilm attempt {}",film);
+        log.info("updateFilm attempt {}", film);
         validateFilm(film);
-        filmService.updateFilm(film);
-        return film;
+        final Film updatedFilm = filmService.updateFilm(film);
+        log.info("В ответ на запрос PUT /films получили обновленный фильм {}", updatedFilm);
+        return updatedFilm;
     }
 
     @Validated
     @GetMapping("/{id}")
     public Film getFilmById(@PathVariable @Positive Integer id) {
-        log.info("attempt to get film by id {}",id);
-        return filmService.getFilmById(id);
+        log.info("attempt to get film by id {}", id);
+        final Film film = filmService.getFilmById(id);
+        log.info("В ответ на запрос GET /films/{} получили фильм {}", id, film);
+        return film;
+    }
+
+    @Validated
+    @DeleteMapping("/{id}")
+    public void deleteFilmById(@PathVariable @Positive Integer id) {
+        log.info("attempt to delete film id = {}", id);
+        filmService.deleteFilmById(id);
+        log.info("film id = {} successfully deleted", id);
     }
 
     @Validated
     @PutMapping("/{id}/like/{userId}")
     public void addLike(@PathVariable @Positive Integer id,
-                              @PathVariable @Positive Integer userId) {
+                        @PathVariable @Positive Integer userId) {
         log.info("attempt set like to film {} by user {}", id, userId);
         filmService.addLike(id, userId);
     }
 
     @Validated
     @DeleteMapping("/{id}/like/{userId}")
-    public void removeLike(@PathVariable @Positive Integer id,
-                                 @PathVariable @Positive Integer userId) {
+    public void removeLike(@PathVariable Integer id,
+                           @PathVariable Integer userId) {
         log.info("attempt remove like from film {} by user {}", id, userId);
-        filmService.removeLike(id,userId);
+        filmService.removeLike(id, userId);
+    }
+
+    @GetMapping("/director/{directorId}")
+    public List<Film> getFilmByDirector(@PathVariable @Positive int directorId,
+                                        @RequestParam(defaultValue = "year") String sortBy) {
+        log.info("Получили запрос фильмов режиссера по id. GET films/directors/{}?sortBy={}", directorId, sortBy);
+        // Проверяем корректность параметра сортировки
+        if (!sortBy.equals("year") && !sortBy.equals("likes")) {
+            log.info("Параметр сортировки некорректный {}", sortBy);
+            throw new ValidationException("Невалидный параметр sortBy. Ожиадается 'year' или 'likes'.");
+        }
+        final List<Film> films = filmService.getFilmsByDirector(directorId, sortBy);
+        log.info("Возвращаем отсортированные по: '{}' фильмы режиссера с id: {}. Фильмы: {}", sortBy, directorId, films);
+        return films;
     }
 
     @Validated
-    @GetMapping("/popular")
-    public List<Film> getPopularFilms(@RequestParam(defaultValue = "10") @Positive Integer count) {
-        return filmService.getPopularFilms(count);
+    @GetMapping("/common") // Функциональность «Общие фильмы»
+    public List<Film> getCommonFilms(@RequestParam @Positive Integer userId,
+                                     @RequestParam @Positive Integer friendId) {
+        log.info("get common films from user {} by friend {}", userId, friendId);
+        return filmService.getCommonFilms(userId, friendId);
+    }
+
+    @Validated
+    @GetMapping("search")
+    public List<Film> searchFilms(@RequestParam() @NotBlank String query, @RequestParam @NotNull List<String> by) {
+        log.info("Получили запрос на поиск фильмов. GET films/search/?query={}&by={}", query, by);
+        // Проверка, что хотя бы один параметр поиска указан
+        if (!by.contains("title") && !by.contains("director")) {
+            log.warn("Праметры поиска 'by' указаны некорректно: {}.", by);
+            throw new ValidationException("Параметр поиска указан некорректно. " +
+                                          "Ожидаем 'title' или 'director', а получили " + by);
+        }
+        final List<Film> films = filmService.searchFilms(query, by);
+        log.info("В ответ на запрос GET films/search/?query={}&by={} возвращаем фильмы {}", query, by, films);
+        return films;
+    }
+
+    @GetMapping(value = "/popular")
+    public Collection<Film> getPopularFilms(@RequestParam(defaultValue = "10") @Min(0) Integer count,
+                                            @RequestParam(required = false) Integer genreId,
+                                            @RequestParam(required = false) @Min(1895) Integer year) {
+        log.info("Получили запрос популярных фильмов GET films/popular?count={}&genreId={}&year={}", count, genreId, year);
+        Collection<Film> films = filmService.getPopular(count, genreId, year);
+        log.info("В ответ на запрос GET films/popular?count={}&genreId={}&year={} возвращаем фильмы: {}", count, genreId, year, films);
+        return films;
     }
 
     private void validateFilm(Film film) {
-        if (film.getReleaseDate().isBefore(FIRST_CINEMA_DATE) ||
-                film.getReleaseDate().isAfter(LocalDate.now())) {
-            log.warn("Data error - invalid release date {}",film.getReleaseDate());
+        if (film.getReleaseDate().isBefore(FIRST_CINEMA_DATE)) {
+            log.warn("Data error - invalid release date {}", film.getReleaseDate());
             throw new ValidationException("Invalid date");
         } else if (film.getDuration().toMinutes() <= 0) {
-            log.warn("Data error - invalid duration {}",film.getDuration());
+            log.warn("Data error - invalid duration {}", film.getDuration());
             throw new ValidationException("Invalid duration");
         } else if (film.getMpa().getId() < 1 || film.getMpa().getId() > ms.getNumberOf()) {
-            log.warn("Data error - invalid mpa id {}",film.getMpa().getId());
+            log.warn("Data error - invalid mpa id {}", film.getMpa().getId());
             throw new ValidationException("Invalid mpa id");
         }
-
         if (film.getGenres() != null) {
             for (Genre genre : film.getGenres()) {
                 if (genre.getId() < 1 || genre.getId() > gs.getNumberOf()) {
-                    log.warn("Data error - invalid genre id {}",genre.getId());
+                    log.warn("Data error - invalid genre id {}", genre.getId());
                     throw new ValidationException("Invalid genre id");
                 }
             }

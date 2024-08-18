@@ -8,9 +8,17 @@ import java.util.Optional;
 public interface FilmStorage {
     List<Film> getAllFilms();
 
+    void deleteFilmById(Integer id);
+
     Film addFilm(Film film);
 
     Film updateFilm(Film film);
 
     Optional<Film> findFilmById(Integer id);
+
+    List<Film> getFilmsByDirector(int directorId, String sortBy);
+
+    List<Film> searchFilmsByParameter(String query, boolean searchByTitle, boolean searchByDirector);
+
+    List<Film> getTopPopularWithFilter(Integer count, Integer genreId, Integer year);
 }

@@ -66,12 +66,17 @@ public class UserDbStorage implements UserStorage {
     @Override
     public Optional<User> findUserById(Integer id) {
         try {
-            return Optional.ofNullable(jdbcTemplate.queryForObject("SELECT * FROM app_users WHERE id =" +
-                    " ?;", userRowMapper,id));
+            return Optional.ofNullable(jdbcTemplate.queryForObject("SELECT * FROM app_users " +
+                    "WHERE id = ?;", userRowMapper,id));
         } catch (EmptyResultDataAccessException e) {
             log.warn("User with id {} not found",id);
             throw  new DataNotFoundException("User with id {} not found");
         }
     }
 
+    @Override
+    public void deleteUserById(Integer id) {
+        final String sql = "DELETE FROM app_users WHERE id = ?";
+        jdbcTemplate.update(sql, id);
+    }
 }

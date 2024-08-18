@@ -51,13 +51,15 @@ public class GenreDbStorage implements GenreStorage {
 
     @Override
     public void addFilmGenre(Integer filmId, Integer genreId) {
-        jdbcTemplate.update("INSERT INTO film_genre (film_id, genre_id) VALUES (?,?);", filmId,
+        int rowAffected = jdbcTemplate.update("INSERT INTO film_genre (film_id, genre_id) VALUES (?,?);", filmId,
                 genreId);
+        log.info("Добавлена связь фильм-жанры film_id: {}, genre_id: {}, вставлено строк: {}", filmId, genreId, rowAffected);
     }
 
     @Override
     public void removeFilmGenre(Integer filmId) {
-        jdbcTemplate.update("DELETE FROM film_genre WHERE film_id = ?;",filmId);
+        int rowsAffected = jdbcTemplate.update("DELETE FROM film_genre WHERE film_id = ?;",filmId);
+        log.info("Удалили связи фильм-жанры для фильма с id: {}. Удалено {} строк", filmId, rowsAffected);
     }
 
     @Override
@@ -67,27 +69,51 @@ public class GenreDbStorage implements GenreStorage {
 
     @Override
     public List<Film> loadGenres(List<Film> films) {
-        Map<Integer, Genre> genres = new HashMap<>();
-        Map<Integer, Film> f = new HashMap<>();
-        films.forEach(film -> {
-            film.setGenres(new LinkedHashSet<>());
-            f.put(film.getId(), film);
-        });
-        getAllGenres().forEach(genre -> genres.put(genre.getId(), genre));
-        jdbcTemplate.query("SELECT * FROM film_genre",
-                (rs) -> {
-                    while (rs.next()) {
-                        Integer filmId = rs.getInt("film_id");
-                        f.get(filmId).getGenres().add(genres.get(rs.getInt("genre_id")));
+        //Мапим список фильмов в список их id
+        final List<Integer> filmIds = films.stream().map(Film::getId).toList();
+        log.info("Ищем жанры фильмов с id: {} для добавления их в фильм", filmIds);
 
-                    }
+        final String getFilmGenreRelationsSql = """
+                SELECT film_id, genre_id
+                FROM film_genre
+                """;
+        final List<FilmGenreRelation> filmGenreRelations = jdbcTemplate.query(getFilmGenreRelationsSql,
+                (resultSet, rowNum) -> //лямбда реализует метод RowMapper для объектов FilmGenreRelation
+                        new FilmGenreRelation(resultSet.getInt("film_id"), resultSet.getInt("genre_id")));
+        log.info("Список связей фильм - жанры через record: {}", filmGenreRelations);
 
-                });
-        f.values().forEach(film -> {
-            film.setGenres(new LinkedHashSet<>(film.getGenres().stream()
-                    .sorted(comparator).collect(Collectors.toSet())));
-        });
-        return new ArrayList<>(f.values());
+        //Получаем список уникальных id жанров для запрошенных фильмов
+        final List<Integer> genreIds = filmGenreRelations.stream()
+                .map(relation -> relation.genreId)
+                .distinct()
+                .toList();
+
+        // Получение жанров по списку их id
+        final String getGenresSql = """
+                SELECT id, name
+                FROM genres
+                """;
+        final List<Genre> genres = jdbcTemplate.query(getGenresSql, grm);
+
+        // Создаем мапы для быстрого доступа к фильмам и жанрам по их id
+        final Map<Integer, Film> filmMap = films.stream().collect(Collectors.toMap(Film::getId, film -> film));
+        final Map<Integer, Genre> genreMap = genres.stream().collect(Collectors.toMap(Genre::getId, genre -> genre));
+
+        // Добавление жанров к соответствующим фильмам
+        filmMap.forEach((id, film) -> film.setGenres(new LinkedHashSet<>()));
+        for (FilmGenreRelation relation : filmGenreRelations) {
+            Film film = filmMap.get(relation.filmId());
+            if (film != null) {
+                Genre genre = genreMap.get(relation.genreId());
+                if (genre != null) {
+                    film.getGenres().add(genre);
+                }
+            }
+        }
+        return films;
+    }
+
+    private record FilmGenreRelation(int filmId, int genreId) {
     }
 
     @Override
@@ -111,6 +137,7 @@ public class GenreDbStorage implements GenreStorage {
                     public void setValues(PreparedStatement ps, int i) throws SQLException {
                         ps.setInt(1, film.getId());
                         ps.setInt(2,newGenres.get(i).getId());
+                        log.info("Сохраняем в БД новые связи фильм-жанры film_id: {}, genre_id: {}", film.getId(), newGenres.get(i).getId());
                     }
 
                     @Override
