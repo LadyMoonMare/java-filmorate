@@ -167,16 +167,6 @@ public class FilmServiceImpl implements FilmService {
     public List<Film> getCommonFilms(Integer userId, Integer friendId) {
         Stream.of(userId, friendId).forEach(this::validateUser);
 
-        // Добавил проверку на подтверждённую дружбу, но в тестах Postman и у обоих пользователей вообще нет друзей =(
-        /*if (friendsStorages.getFriendsFromDb(userId).stream()
-                .map(User::getId)
-                .noneMatch(id -> id.equals(friendId))
-                || friendsStorages.getFriendsFromDb(friendId).stream()
-                .map(User::getId)
-                .noneMatch(id -> id.equals(userId))) {
-            log.warn("Users with id {} and {} are not friends", userId, friendId);
-            throw new DataNotFoundException("Users with id " + userId + " and " + friendId + " are not friends");
-        }*/
         List<Film> commonFilms = ls.getFilmLikes(userId).stream()
                 .filter(ls.getFilmLikes(friendId)::contains)
                 .sorted(Comparator.comparingInt((Film film) -> ls.getLikesFromDb(film.getId()).size()).reversed())

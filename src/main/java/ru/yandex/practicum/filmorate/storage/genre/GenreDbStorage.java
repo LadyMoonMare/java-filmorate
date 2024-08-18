@@ -111,35 +111,6 @@ public class GenreDbStorage implements GenreStorage {
             }
         }
         return films;
-
-//        Map<Integer, Genre> genres = new HashMap<>();
-//        Map<Integer, Film> f = new HashMap<>();
-//        films.forEach(film -> {
-//            film.setGenres(new LinkedHashSet<>());
-//            f.put(film.getId(), film);
-//        });
-//        log.info("Сформировали Map с фильмами для которых загружаем жанры: {}", f);
-//        getAllGenres().forEach(genre -> genres.put(genre.getId(), genre));
-//        jdbcTemplate.query("SELECT film_id, genre_id FROM film_genre",
-//                (rs) -> {
-//                    while (rs.next()) {
-//                        Integer filmId = rs.getInt("film_id");
-//                        int genreId = rs.getInt("genre_id");
-//                        log.info("Из таблицы связей фильм-жанры получили film_id: {}, genre_id: {}", filmId, genreId);
-//                        Film film = f.get(filmId);
-//                        log.info("Из Map с фильмами получили фильм которому сетим жанры: {}", film);
-//                        if (film != null) {
-//                            film.getGenres().add(genres.get(rs.getInt("genre_id")));
-//                            log.info("Присвоили фильму жанр {}", film);
-//                        }
-//                    }
-//
-//                });
-//        f.values().forEach(film -> {
-//            film.setGenres(new LinkedHashSet<>(film.getGenres().stream()
-//                    .sorted(comparator).collect(Collectors.toSet())));
-//        });
-//        return new ArrayList<>(f.values());
     }
 
     private record FilmGenreRelation(int filmId, int genreId) {

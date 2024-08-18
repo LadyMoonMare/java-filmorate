@@ -72,7 +72,9 @@ public class FilmController {
     @Validated
     @DeleteMapping("/{id}")
     public void deleteFilmById(@PathVariable @Positive Integer id) {
+        log.info("attempt to delete film id = {}", id);
         filmService.deleteFilmById(id);
+        log.info("film id = {} successfully deleted", id);
     }
 
     @Validated
@@ -91,15 +93,9 @@ public class FilmController {
         filmService.removeLike(id, userId);
     }
 
-//    @Validated
-//    @GetMapping("/popular")
-//    public List<Film> getPopularFilms(@RequestParam(defaultValue = "10") @Positive Integer count) {
-//        return filmService.getPopularFilms(count);
-//    }
-
     @GetMapping("/director/{directorId}")
     public List<Film> getFilmByDirector(@PathVariable @Positive int directorId,
-                                        @RequestParam(required = false, defaultValue = "year") String sortBy) {
+                                        @RequestParam(defaultValue = "year") String sortBy) {
         log.info("Получили запрос фильмов режиссера по id. GET films/directors/{}?sortBy={}", directorId, sortBy);
         // Проверяем корректность параметра сортировки
         if (!sortBy.equals("year") && !sortBy.equals("likes")) {
